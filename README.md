@@ -24,7 +24,7 @@ git clone https://github.com/uadinaa/DARE-django-final.git
 
 1. Go into the backend folder:
     ```bash
-    cd your-project
+    cd backend
     ```
 
 2. Create and activate a virtual environment:
@@ -64,7 +64,7 @@ Now open a new terminal window and proceed with frontend setup.
 
 1. Navigate to the Angular directory:
    ```bash
-   cd angular-app
+   cd frontend
    ```
 
 2. Install Node dependencies:
