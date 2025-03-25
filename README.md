@@ -56,15 +56,21 @@ git clone https://github.com/uadinaa/DARE-django-final.git
 
 Django is now running at: [http://localhost:8000](http://localhost:8000).
 
-6. Open the [http://localhost:8000/admin](http://localhost:8000/admin). There you must:
-- Open the 'Categories' model
-- Add a single entry. For example: 'default'
-- Save it.
+6. Configure Categories:
 
-This is done because making posts requires selecting a category of the post.
+   Access the Django admin panel to set up a category:
 
-Now open a new terminal window and proceed with frontend setup.
+   1. Open [http://localhost:8000/admin](http://localhost:8000/admin) in your browser.
+   2. Log in using the superuser credentials.
+   3. Navigate to the **Categories** section.
+   4. Add a new category (e.g., **"default"**) and save it.
 
+   > **Note:** This is necessary because creating posts requires selecting a category. Ensure **at least one category** exists before proceeding.
+
+7. **Proceed to Frontend Setup**:
+
+   Open a new terminal window and follow the instructions for setting up the frontend.
+   
 ---
 
 ### 3. Frontend (Angular)
