@@ -39,24 +39,24 @@ git clone https://github.com/uadinaa/DARE-django-final.git
    pip install -r requirements.txt
    ```
 
-3. Apply database migrations:
+4. Apply database migrations:
    ```bash
    python manage.py migrate
    ```
 
-4. Create a superuser (optional):
+5. Create a superuser (optional):
    ```bash
    python manage.py createsuperuser
    ```
 
-5. Run the Django server:
+6. Run the Django server:
    ```bash
    python manage.py runserver
    ```
 
 Django is now running at: [http://localhost:8000](http://localhost:8000).
 
-6. Configure Categories:
+7. Configure Categories:
 
    Access the Django admin panel to set up a category:
 
@@ -67,10 +67,10 @@ Django is now running at: [http://localhost:8000](http://localhost:8000).
 
    > **Note:** This is necessary because creating posts requires selecting a category. Ensure **at least one category** exists before proceeding.
 
-7. **Proceed to Frontend Setup**:
+8. **Proceed to Frontend Setup**:
 
    Open a new terminal window and follow the instructions for setting up the frontend.
-   
+
 ---
 
 ### 3. Frontend (Angular)
