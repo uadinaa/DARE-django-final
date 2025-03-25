@@ -1,0 +1,68 @@
+*{
+  position: relative;
+  top: 3px;
+}
+
+.username {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.form-container {
+  display: flex;
+  width: 100%;
+}
+
+.form-input {
+  flex-grow: 1;
+  border: none;
+  padding: 10px;
+  margin-right: 10px;
+}
+
+.form-input:focus {
+  outline: none;
+}
+
+.post-button {
+  padding: 10px 20px;
+  cursor: pointer;
+  float: right;
+  width: auto;
+  margin-left: 5px;
+}
+
+.content-form {
+  border: none;
+  width: 60%;
+  resize: none;
+  flex-grow: 1;
+  outline: none;
+  height: 40px;
+}
+
+.post-form {
+  display: flex;
+}
+
+hr {
+  border: none;
+  height: 1px;
+  background-color: lightgrey;
+}
+
+select {
+  width: 20%;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  margin-top: 6px;
+  margin-bottom: 5px;
+  resize: vertical;
+  margin-left: auto;
+  display: block;
+  background-color: white;
+  color: rgb(83, 69, 119);
+  font-weight: bolder;
+}
