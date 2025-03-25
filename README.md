@@ -156,7 +156,7 @@ Angular is now running at: [http://localhost:4200](http://localhost:4200)
 
 ---
 
-## 📋 **4. Keep Requirements Updated**
+## 📋 **Keep Requirements Updated**
 When you add new packages:
 
 1. **Django**:  
