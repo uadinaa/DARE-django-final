@@ -17,7 +17,7 @@ Ensure the following are installed:
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/your-project.git
+git clone https://github.com/uadinaa/DARE-django-final.git
 ```
 
 ### 2. Backend (Django)
@@ -54,7 +54,9 @@ git clone https://github.com/your-username/your-project.git
    python manage.py runserver
    ```
 
-Django is now running at: [http://localhost:8000](http://localhost:8000)
+Django is now running at: [http://localhost:8000](http://localhost:8000).
+
+Now open a new terminal window and proceed with frontend setup.
 
 ---
 
