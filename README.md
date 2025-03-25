@@ -86,42 +86,59 @@ Now open a new terminal window and proceed with frontend setup.
 
 Angular is now running at: [http://localhost:4200](http://localhost:4200)
 
-## App usage
+## App Usage
 
-### Login and registration
+### Login and Registration
 
-You can use the superuser you created to login into the app.
+- **Login with Superuser**: Use the superuser credentials you created during setup to log in.
+- **Register a New User**: If you prefer, you can register a new user with a unique username and password and log in using those credentials.
 
-Or you can register a user with a different name and login as him.
+### Logout
 
-### Log out 
-You can log out by pressing 'log out' in the header. You will be redirected to the login page where you can login again.
+- To log out, click the **"Log Out"** button in the header. You will be redirected to the login page where you can log in again if needed.
 
 ### Posting
-To make a new post choose a category from the dropdown, write something in a post form and click "Post"
 
-### Post details
-To look at the post details click on the post and a separate page wiht post details will open
+- **Create a New Post**: Select a category from the dropdown menu, enter your content in the post form, and click **"Post"** to submit it.
+
+### Post Details
+
+- **View Post Details**: Click on any post to open a dedicated page displaying the post's full details.
 
 ### Commenting
-To leave a comment, open the post you want to comment under and write the comment into the form in the lower part of the post and click 'Post'
+
+- **Add a Comment**: Open the post you want to comment on, write your comment in the input field at the bottom of the post, and click **"Post"** to submit it.
 
 ### Liking
-You can like a post by pressing the 'Like' button under it. You can also remove it by pressing 'unlike'.
 
-### Updating a post
-To update a post you need to be an owner of that post. To do it open the post, clik on the 'update' button. A new page will appear where you can choose a different category and write new text into the form. To save it click 'save'
+- **Like a Post**: Click the **"Like"** button below a post to like it.
+- **Unlike a Post**: If you've already liked a post, you can click **"Unlike"** to remove your like.
 
-### Deleting a post
-To update a post you need to be an owner of that post. To do it open the post, clik on the 'delete' button. The post will be deleted an you will be returned to the main page.
+### Updating a Post
+
+- **Edit Your Post**: You can only update posts that you own.
+  1. Open the post you want to update.
+  2. Click the **"Update"** button.
+  3. On the new page, you can choose a different category and edit the post content.
+  4. Click **"Save"** to update the post.
+
+### Deleting a Post
+
+- **Remove Your Post**: You can only delete posts that you own.
+  1. Open the post you want to delete.
+  2. Click the **"Delete"** button.
+  3. The post will be permanently removed, and you will be redirected to the main page.
 
 ---
 
+## Known Issues
 
-## Known issues
+### Session Expiry
 
-### Session expiry
-For some reason after around 10 minutes after login you are no longer authenticated and the API calls are unsuccessful. To solve it press 'log out' in the header and login again. Needs to be solved later.
+- **Issue**: After approximately 10 minutes, your authentication may expire, causing API calls to fail.
+- **Temporary Solution**: Click **"Log Out"** in the header and log back in to restore access.
+
+> This issue requires further investigation and a permanent fix in future updates.
 
 ## 🧹 Cleanup & Deactivation
 
