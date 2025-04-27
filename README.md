@@ -39,24 +39,37 @@ git clone https://github.com/uadinaa/DARE-django-final.git
    pip install -r requirements.txt
    ```
 
-3. Apply database migrations:
+4. Apply database migrations:
    ```bash
    python manage.py migrate
    ```
 
-4. Create a superuser (optional):
+5. Create a superuser (optional):
    ```bash
    python manage.py createsuperuser
    ```
 
-5. Run the Django server:
+6. Run the Django server:
    ```bash
    python manage.py runserver
    ```
 
 Django is now running at: [http://localhost:8000](http://localhost:8000).
 
-Now open a new terminal window and proceed with frontend setup.
+7. Configure Categories:
+
+   Access the Django admin panel to set up a category:
+
+   1. Open [http://localhost:8000/admin](http://localhost:8000/admin) in your browser.
+   2. Log in using the superuser credentials.
+   3. Navigate to the **Categories** section.
+   4. Add a new category (e.g., **"default"**) and save it.
+
+   > **Note:** This is necessary because creating posts requires selecting a category. Ensure **at least one category** exists before proceeding.
+
+8. **Proceed to Frontend Setup**:
+
+   Open a new terminal window and follow the instructions for setting up the frontend.
 
 ---
 
@@ -80,8 +93,6 @@ Now open a new terminal window and proceed with frontend setup.
 Angular is now running at: [http://localhost:4200](http://localhost:4200)
 
 ---
-
-## API endpoints
 
 ## Аутентификация (`/api/`)
 
@@ -316,7 +327,6 @@ Angular is now running at: [http://localhost:4200](http://localhost:4200)
 
 ## Заметки по Аутентификации (JWT)
 
-* **Логин:** Отправьте `POST` запрос на `/api/token/` с `username` и `password`. В ответ получите `access` и `refresh` токены.
 * **Аутентифицированные запросы:** Для доступа к защищенным эндпоинтам включайте `access` токен в заголовок каждого запроса: `Authorization: Bearer <your_access_token>`.
 * **Обновление токена:** Когда `access` токен истечет (обычно через 60 минут), отправьте `POST` запрос на `/api/token/refresh/` с вашим `refresh` токеном в теле запроса, чтобы получить новый `access` токен.
 * **Логаут:** Логаут реализуется на стороне клиента путем удаления сохраненных `access` и `refresh` токенов из хранилища браузера (`localStorage` или `sessionStorage`). На сервере нет специального эндпоинта для логаута (если не настроен черный список токенов).
