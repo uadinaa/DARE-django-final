@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:14
+    container_name: postgres_db
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=fitness_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=pass
+    ports:
+      - "5432:5432"
+
+  backend:
+    container_name: django_backend
+    build: .
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - ./media:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=django-insecure-xt_ce-7#nn%a3)69wm1#i4^-1-119iz_5&sw+an9t2xtbe49)8
+      - DEBUG=True
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=fitness_db
+      - DB_USER=postgres
+      - DB_PASSWORD=pass
+      - DB_HOST=db
+      - DB_PORT=5432
+      - CORS_ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:8080
+    depends_on:
+      - db
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+volumes:
+  postgres_data:

@@ -1,0 +1,25 @@
+from rest_framework import serializers
+from .models import Post
+from users.serializers import UserSerializer
+
+class PostSerializer(serializers.ModelSerializer):
+    author = UserSerializer(read_only=True)
+    likes_count = serializers.SerializerMethodField(read_only=True)
+    is_liked_by_user = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Post
+        fields = ['id', 'author', 'content', 'image', 'video', 'created_at', 'updated_at', 'likes_count', 'is_liked_by_user']
+        read_only_fields = ['id', 'author', 'created_at', 'updated_at', 'likes_count', 'is_liked_by_user']
+
+    def get_likes_count(self, obj):
+        return obj.likes.count()
+
+    def get_is_liked_by_user(self, obj):
+        # Получаем текущего пользователя из контекста запроса
+        user = self.context.get('request').user
+        # Если пользователь не аутентифицирован, он не мог лайкнуть
+        if not user or not user.is_authenticated:
+            return False
+        # Проверяем, существует ли лайк от этого пользователя для этого поста
+        return obj.likes.filter(user=user).exists()
