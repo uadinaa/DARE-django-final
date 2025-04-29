@@ -1,89 +1,85 @@
 <script setup>
-// Импортируем компонент формы регистрации
+import { ref } from 'vue'; // Импортируем ref для состояния
 import RegisterForm from './components/RegisterForm.vue';
+import LoginForm from './components/LoginForm.vue'; // Импортируем компонент входа
+
+// Состояние для определения, какую форму показывать
+const showLogin = ref(false); // По умолчанию показываем регистрацию
 </script>
 
 <template>
   <header>
     <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-    <div class="wrapper">
-      </div>
+     <div class="nav-buttons">
+       <button @click="showLogin = false" :class="{ active: !showLogin }">Регистрация</button>
+       <button @click="showLogin = true" :class="{ active: showLogin }">Вход</button>
+     </div>
   </header>
 
   <main>
-    <RegisterForm />
+    <LoginForm v-if="showLogin" />
+    <RegisterForm v-else />
   </main>
 </template>
 
 <style scoped>
-/* Стили для App.vue можно изменить или удалить по желанию */
 header {
   line-height: 1.5;
-  text-align: center; /* Центрируем лого */
   margin-bottom: 2rem;
+  display: flex; /* Добавим flex для лого и кнопок */
+  flex-direction: column; /* Лого сверху, кнопки снизу */
+  align-items: center; /* Центрируем все */
 }
 
 .logo {
   display: block;
-  margin: 0 auto 2rem;
+  margin: 0 auto 1rem; /* Отступ снизу для лого */
 }
 
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
+ /* Стили для кнопок переключения */
+.nav-buttons {
+   display: flex;
+   gap: 10px; /* Расстояние между кнопками */
+   margin-bottom: 1rem;
 }
 
-nav a.router-link-exact-active {
-  color: var(--color-text);
+.nav-buttons button {
+   padding: 8px 15px;
+   border: 1px solid #ccc;
+   background-color: #f8f9fa;
+   cursor: pointer;
+   border-radius: 4px;
+   transition: background-color 0.2s, border-color 0.2s;
 }
 
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
+.nav-buttons button:hover {
+   background-color: #e9ecef;
 }
 
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
+.nav-buttons button.active {
+   background-color: #007bff;
+   color: white;
+   border-color: #007bff;
 }
 
 main {
    padding: 1rem;
 }
 
-/* Медиа-запросы для адаптивности, можно оставить */
+/* Медиа-запросы можно оставить или настроить */
 @media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-    text-align: left;
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+   header {
+       /* На больших экранах можно вернуть лого слева, кнопки справа */
+       flex-direction: row;
+       justify-content: space-between; /* Разносим лого и кнопки */
+       padding-right: calc(var(--section-gap) / 2);
+   }
+    .logo {
+       margin: 0 2rem 0 0; /* Отступ справа для лого */
+   }
+    .nav-buttons {
+       margin-bottom: 0; /* Убираем нижний отступ на больших экранах */
+   }
    main {
       padding: 2rem;
    }
