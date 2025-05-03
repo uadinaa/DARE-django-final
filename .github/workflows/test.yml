@@ -1,0 +1,96 @@
+# .github/workflows/test.yml
+name: Test SSH Key Setup
+
+on:
+  push:
+    branches:
+      - main # Или ваша ветка
+    paths:
+      - '.github/workflows/test.yml' # Запускать при изменении этого файла
+      - 'backend/**' # Или при изменении бэкенда, если хотите
+  workflow_dispatch: # Позволяет запускать вручную из интерфейса GitHub Actions
+
+jobs:
+  test-key:
+    runs-on: ubuntu-latest
+    name: Validate SSH Key from Secret
+
+    steps:
+      - name: Checkout code # Не обязательно для теста ключа, но может пригодиться
+        uses: actions/checkout@v4
+
+      - name: Load and Validate SSH Key
+        id: validate_key # Дадим ID шагу для возможного использования в будущем
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+        run: |
+          echo "Setting up temporary SSH environment..."
+          mkdir -p ~/.ssh/
+          chmod 700 ~/.ssh/
+
+          echo "Writing key from secret to file..."
+          # Используем printf для надежной записи многострочного секрета
+          printf "%s\n" "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa_test
+          chmod 600 ~/.ssh/id_rsa_test
+
+          echo "Validating key format with ssh-keygen..."
+          # Пытаемся получить fingerprint. Если ключ невалидный, команда вернет ошибку.
+          if ssh-keygen -l -f ~/.ssh/id_rsa_test > /dev/null 2>&1; then
+            echo "✅ Key format appears valid (fingerprint check passed)."
+            # Опционально: выводим fingerprint для сверки
+            ssh-keygen -l -f ~/.ssh/id_rsa_test
+          else
+            echo "❌ ERROR: Key format is invalid according to ssh-keygen."
+            # Выводим первые и последние строки для отладки (ОСТОРОЖНО С ПРИВАТНЫМ КЛЮЧОМ!)
+            echo "--- Start of key data written ---"
+            head -n 3 ~/.ssh/id_rsa_test
+            echo "..."
+            tail -n 3 ~/.ssh/id_rsa_test
+            echo "--- End of key data written ---"
+            rm ~/.ssh/id_rsa_test # Удаляем ключ в случае ошибки
+            exit 1 # Завершаем workflow с ошибкой
+          fi
+
+          echo "Attempting to add key to ssh-agent..."
+          eval $(ssh-agent -s)
+          # Добавляем ключ в агент
+          if ssh-add ~/.ssh/id_rsa_test; then
+            echo "✅ Key successfully added to ssh-agent."
+            # Проверяем, что ключ действительно добавлен
+            echo "Listing keys in agent:"
+            ssh-add -l
+          else
+            echo "❌ ERROR: Failed to add key to ssh-agent."
+            rm ~/.ssh/id_rsa_test # Удаляем ключ
+            exit 1 # Завершаем workflow с ошибкой
+          fi
+
+          # Очищаем временный файл ключа после добавления в агент
+          echo "Cleaning up key file..."
+          rm ~/.ssh/id_rsa_test
+
+          echo "SSH key validation and agent setup successful."
+
+      - name: Attempt SSH Connection Test (Optional)
+        # Этот шаг попробует подключиться к серверу, используя ключ из агента.
+        # Он проверяет не только ключ, но и доступность сервера и authorized_keys.
+        if: success() # Выполнять только если предыдущий шаг успешен
+        env:
+          EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com
+          EC2_USER: ubuntu
+        run: |
+          echo "Attempting simple SSH connection to ${EC2_USER}@${EC2_HOST}..."
+          # Устанавливаем known_hosts перед подключением
+          ssh-keyscan -H "${EC2_HOST}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+          # Пытаемся выполнить простую команду 'exit' на удаленном сервере
+          # BatchMode=yes - не запрашивать пароли и т.д.
+          # StrictHostKeyChecking=no - доверять ключу хоста (т.к. мы его только что добавили через keyscan)
+          # Используется ключ из агента, -i не нужен
+          if ssh -o StrictHostKeyChecking=no -o BatchMode=yes ${EC2_USER}@${EC2_HOST} exit; then
+             echo "✅ SSH connection test successful!"
+          else
+             echo "❌ ERROR: SSH connection test failed. Check EC2 server, user, authorized_keys, or security group."
+             exit 1
+          fi
