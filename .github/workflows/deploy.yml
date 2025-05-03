@@ -18,14 +18,25 @@ jobs:
       - name: Set up SSH Agent and Known Hosts
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
-          EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com
+          EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com # Ваш хост
         run: |
+          echo "Starting SSH agent..."
           eval $(ssh-agent -s)
-          echo "${SSH_PRIVATE_KEY}" | ssh-add -
+
+          echo "Writing SSH key to file..."
           mkdir -p ~/.ssh/
+          echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa # Записываем ключ в файл
+          chmod 600 ~/.ssh/id_rsa # Устанавливаем права
+
+          echo "Adding SSH key to agent from file..."
+          ssh-add ~/.ssh/id_rsa # Добавляем ключ в агент ИЗ ФАЙЛА
+
+          echo "Adding EC2 host key to known_hosts..."
+          # mkdir -p ~/.ssh/ # Уже создана выше
           chmod 700 ~/.ssh/
           ssh-keyscan -H "${EC2_HOST}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
+
           echo "SSH setup complete."
 
       - name: Deploy to EC2
