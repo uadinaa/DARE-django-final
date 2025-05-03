@@ -1,4 +1,3 @@
-# .github/workflows/deploy.yml
 name: Deploy Backend to EC2
 
 on:
@@ -22,73 +21,35 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
           EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com
         run: |
-          echo "Setting up SSH environment..."
           mkdir -p ~/.ssh/
           chmod 700 ~/.ssh/
           KEY_FILE_PATH=~/.ssh/id_rsa_deploy
           printf "%s\n" "${SSH_PRIVATE_KEY}" > ${KEY_FILE_PATH}
           chmod 600 ${KEY_FILE_PATH}
-          echo "Validating key format..."
           if ! ssh-keygen -l -f ${KEY_FILE_PATH} > /dev/null 2>&1; then
             echo "❌ ERROR: Invalid SSH key format detected in secret." >&2
             exit 1
           fi
-          echo "✅ Key format valid."
-          echo "Adding EC2 host key to known_hosts..."
           ssh-keyscan -H "${EC2_HOST}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-          echo "SSH key file and known_hosts setup complete."
 
       - name: Deploy to EC2
         env:
           EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com
           EC2_USER: ubuntu
-          DEPLOY_DIR: /home/ubuntu/app # Директория для деплоя на EC2
+          DEPLOY_DIR: /home/ubuntu/app/backend # <-- Директория для бэкенда
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: fitness_db
           DB_USER: postgres
         run: |
-          echo "Starting deployment..."
-          KEY_FILE_PATH=~/.ssh/id_rsa_deploy # Используем тот же ключ, что создан ранее
-
-          echo "--- Debug: Runner current directory ---"
-          pwd
-          echo "--- Debug: Runner directory contents ---"
-          ls -la
-          echo "--- Debug: Checking source backend directory ---"
-          ls -la ./backend # Убедимся, что папка backend есть и содержит файлы
-          echo "------------------------------------------"
-
-          echo "Creating deployment directory on EC2 if it doesn't exist..."
-          # Подключаемся ТОЛЬКО для создания директории
+          KEY_FILE_PATH=~/.ssh/id_rsa_deploy
           ssh -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} "${EC2_USER}@${EC2_HOST}" "mkdir -p ${DEPLOY_DIR}"
-          echo "Directory creation command sent."
-
-          echo "Copying backend files to EC2..."
-          # Копируем папку backend на сервер
           scp -r -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} ./backend/* "${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/"
-          # ИЗМЕНЕНО: Копируем СОДЕРЖИМОЕ ./backend/* в ${DEPLOY_DIR}/,
-          # что обычно надежнее, если ${DEPLOY_DIR} уже существует.
-          # ИЛИ, если хотите копировать саму папку backend ВНУТРЬ /home/ubuntu/app/:
-          # scp -r -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} ./backend "${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/"
 
-          echo "Files copied."
-
-          # Подключаемся к EC2 и выполняем команды docker-compose
           ssh -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} "${EC2_USER}@${EC2_HOST}" << EOF
-            echo "Connected to EC2. Running deployment commands..."
-            # Если вы копировали СОДЕРЖИМОЕ backend в ${DEPLOY_DIR}, то cd ${DEPLOY_DIR}
-            cd ${DEPLOY_DIR}
-            # Если вы копировали ПАПКУ backend в ${DEPLOY_DIR}, то cd ${DEPLOY_DIR}/backend
-            # cd ${DEPLOY_DIR}/backend
+            cd ${DEPLOY_DIR} # Переходим в директорию бэкенда на EC2
 
-            # Проверим содержимое папки на сервере
-            echo "--- Debug: Contents of ${DEPLOY_DIR} on EC2 ---"
-            ls -la
-            echo "--------------------------------------------------"
-
-            # Экспортируем переменные окружения для docker-compose
             export SECRET_KEY='${{ env.SECRET_KEY }}'
             export DEBUG='False'
             export DB_PASSWORD='${{ env.DB_PASSWORD }}'
@@ -96,34 +57,23 @@ jobs:
             export DB_USER='${{ env.DB_USER }}'
             export DB_HOST=db
 
-            # Ищем docker-compose.prod.yml в текущей директории
-            if [ -f "docker-compose.prod.yml" ]; then
-               COMPOSE_FILE="docker-compose.prod.yml"
-            elif [ -f "docker-compose.yml" ]; then # Запасной вариант, если prod не найден
-               COMPOSE_FILE="docker-compose.yml"
-               echo "WARNING: docker-compose.prod.yml not found, using docker-compose.yml"
-            else
-               echo "ERROR: No docker-compose file found!"
-               exit 1
+            COMPOSE_FILE="docker-compose.prod.yml"
+            if [ ! -f "\${COMPOSE_FILE}" ]; then
+              echo "ERROR: \${COMPOSE_FILE} not found in ${DEPLOY_DIR}!"
+              # Попробуем использовать docker-compose.yml как запасной вариант
+              if [ -f "docker-compose.yml" ]; then
+                COMPOSE_FILE="docker-compose.yml"
+                echo "WARNING: Using docker-compose.yml as fallback."
+              else
+                exit 1
+              fi
             fi
-            echo "Using \${COMPOSE_FILE}"
 
-
-            echo "Stopping existing containers..."
-            docker-compose -f \${COMPOSE_FILE} down --remove-orphans || echo "No containers were running or down failed."
-
-            echo "Pulling db image..."
+            docker-compose -f \${COMPOSE_FILE} down --remove-orphans || echo "Docker down failed or no containers running."
             docker-compose -f \${COMPOSE_FILE} pull db
-
-            echo "Building backend image..."
             docker-compose -f \${COMPOSE_FILE} build backend
-
-            echo "Starting containers..."
             docker-compose -f \${COMPOSE_FILE} up -d
-
-            echo "Cleaning up old docker images..."
             docker image prune -f || echo "Image prune failed."
-
-            echo "Deployment script finished."
+            echo "Deployment script finished on EC2."
           EOF
           echo "Deployment process complete."
