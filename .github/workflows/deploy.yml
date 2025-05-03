@@ -43,21 +43,52 @@ jobs:
         env:
           EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com
           EC2_USER: ubuntu
-          DEPLOY_DIR: /home/ubuntu/app
+          DEPLOY_DIR: /home/ubuntu/app # Директория для деплоя на EC2
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: fitness_db
           DB_USER: postgres
         run: |
           echo "Starting deployment..."
-          KEY_FILE_PATH=~/.ssh/id_rsa_deploy
-          scp -r -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} ./backend "${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/"
+          KEY_FILE_PATH=~/.ssh/id_rsa_deploy # Используем тот же ключ, что создан ранее
+
+          echo "--- Debug: Runner current directory ---"
+          pwd
+          echo "--- Debug: Runner directory contents ---"
+          ls -la
+          echo "--- Debug: Checking source backend directory ---"
+          ls -la ./backend # Убедимся, что папка backend есть и содержит файлы
+          echo "------------------------------------------"
+
+          echo "Creating deployment directory on EC2 if it doesn't exist..."
+          # Подключаемся ТОЛЬКО для создания директории
+          ssh -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} "${EC2_USER}@${EC2_HOST}" "mkdir -p ${DEPLOY_DIR}"
+          echo "Directory creation command sent."
+
+          echo "Copying backend files to EC2..."
+          # Копируем папку backend на сервер
+          scp -r -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} ./backend/* "${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/"
+          # ИЗМЕНЕНО: Копируем СОДЕРЖИМОЕ ./backend/* в ${DEPLOY_DIR}/,
+          # что обычно надежнее, если ${DEPLOY_DIR} уже существует.
+          # ИЛИ, если хотите копировать саму папку backend ВНУТРЬ /home/ubuntu/app/:
+          # scp -r -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} ./backend "${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/"
+
           echo "Files copied."
 
+          # Подключаемся к EC2 и выполняем команды docker-compose
           ssh -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} "${EC2_USER}@${EC2_HOST}" << EOF
             echo "Connected to EC2. Running deployment commands..."
-            cd ${DEPLOY_DIR}/backend
+            # Если вы копировали СОДЕРЖИМОЕ backend в ${DEPLOY_DIR}, то cd ${DEPLOY_DIR}
+            cd ${DEPLOY_DIR}
+            # Если вы копировали ПАПКУ backend в ${DEPLOY_DIR}, то cd ${DEPLOY_DIR}/backend
+            # cd ${DEPLOY_DIR}/backend
 
+            # Проверим содержимое папки на сервере
+            echo "--- Debug: Contents of ${DEPLOY_DIR} on EC2 ---"
+            ls -la
+            echo "--------------------------------------------------"
+
+            # Экспортируем переменные окружения для docker-compose
             export SECRET_KEY='${{ env.SECRET_KEY }}'
             export DEBUG='False'
             export DB_PASSWORD='${{ env.DB_PASSWORD }}'
@@ -65,8 +96,18 @@ jobs:
             export DB_USER='${{ env.DB_USER }}'
             export DB_HOST=db
 
-            echo "Using docker-compose.prod.yml"
-            COMPOSE_FILE="docker-compose.prod.yml"
+            # Ищем docker-compose.prod.yml в текущей директории
+            if [ -f "docker-compose.prod.yml" ]; then
+               COMPOSE_FILE="docker-compose.prod.yml"
+            elif [ -f "docker-compose.yml" ]; then # Запасной вариант, если prod не найден
+               COMPOSE_FILE="docker-compose.yml"
+               echo "WARNING: docker-compose.prod.yml not found, using docker-compose.yml"
+            else
+               echo "ERROR: No docker-compose file found!"
+               exit 1
+            fi
+            echo "Using \${COMPOSE_FILE}"
+
 
             echo "Stopping existing containers..."
             docker-compose -f \${COMPOSE_FILE} down --remove-orphans || echo "No containers were running or down failed."
