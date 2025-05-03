@@ -1,77 +1,88 @@
-# name: Deploy Backend to EC2
+# .github/workflows/deploy.yml
+name: Deploy Backend to EC2
 
-# on:
-#   push:
-#     branches:
-#       - main
-#     paths:
-#       - 'backend/**'
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+  workflow_dispatch:
 
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-#       - name: Set up SSH Agent and Known Hosts
-#         env:
-#           SSH_PRIVATE_KEY: ${{ vars.SSH_KEY }}
-#           EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com
-#         run: |
-#           eval $(ssh-agent -s)
-#           echo "${SSH_PRIVATE_KEY}"
-#           echo "${SSH_PRIVATE_KEY}" | ssh-add -
-#           mkdir -p ~/.ssh/
-#           chmod 700 ~/.ssh/
-#           ssh-keyscan -H "${EC2_HOST}" >> ~/.ssh/known_hosts
-#           chmod 644 ~/.ssh/known_hosts
-#           echo "SSH setup complete."
+      - name: Set up SSH Key File and Known Hosts
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+          EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com
+        run: |
+          echo "Setting up SSH environment..."
+          mkdir -p ~/.ssh/
+          chmod 700 ~/.ssh/
+          KEY_FILE_PATH=~/.ssh/id_rsa_deploy
+          printf "%s\n" "${SSH_PRIVATE_KEY}" > ${KEY_FILE_PATH}
+          chmod 600 ${KEY_FILE_PATH}
+          echo "Validating key format..."
+          if ! ssh-keygen -l -f ${KEY_FILE_PATH} > /dev/null 2>&1; then
+            echo "❌ ERROR: Invalid SSH key format detected in secret." >&2
+            exit 1
+          fi
+          echo "✅ Key format valid."
+          echo "Adding EC2 host key to known_hosts..."
+          ssh-keyscan -H "${EC2_HOST}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          echo "SSH key file and known_hosts setup complete."
 
-#       - name: Deploy to EC2
-#         env:
-#           EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com
-#           EC2_USER: ubuntu
-#           DEPLOY_DIR: /home/ubuntu/app
-#           SECRET_KEY: ${{ secrets.SECRET_KEY }}
-#           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-#           DB_NAME: fitness_db
-#           DB_USER: postgres
-#         run: |
-#           echo "Starting deployment..."
-#           scp -r -o StrictHostKeyChecking=no ./backend "${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/"
-#           echo "Files copied."
+      - name: Deploy to EC2
+        env:
+          EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com
+          EC2_USER: ubuntu
+          DEPLOY_DIR: /home/ubuntu/app
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: fitness_db
+          DB_USER: postgres
+        run: |
+          echo "Starting deployment..."
+          KEY_FILE_PATH=~/.ssh/id_rsa_deploy
+          scp -r -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} ./backend "${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/"
+          echo "Files copied."
 
-#           ssh -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" << EOF
-#             echo "Connected to EC2. Running deployment commands..."
-#             cd ${DEPLOY_DIR}/backend
+          ssh -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} "${EC2_USER}@${EC2_HOST}" << EOF
+            echo "Connected to EC2. Running deployment commands..."
+            cd ${DEPLOY_DIR}/backend
 
-#             export SECRET_KEY='${{ env.SECRET_KEY }}'
-#             export DEBUG='False'
-#             export DB_PASSWORD='${{ env.DB_PASSWORD }}'
-#             export DB_NAME='${{ env.DB_NAME }}'
-#             export DB_USER='${{ env.DB_USER }}'
-#             export DB_HOST=db
+            export SECRET_KEY='${{ env.SECRET_KEY }}'
+            export DEBUG='False'
+            export DB_PASSWORD='${{ env.DB_PASSWORD }}'
+            export DB_NAME='${{ env.DB_NAME }}'
+            export DB_USER='${{ env.DB_USER }}'
+            export DB_HOST=db
 
-#             echo "Using docker-compose.prod.yml"
-#             COMPOSE_FILE="docker-compose.prod.yml"
+            echo "Using docker-compose.prod.yml"
+            COMPOSE_FILE="docker-compose.prod.yml"
 
-#             echo "Stopping existing containers..."
-#             docker-compose -f \${COMPOSE_FILE} down --remove-orphans || echo "No containers were running or down failed."
+            echo "Stopping existing containers..."
+            docker-compose -f \${COMPOSE_FILE} down --remove-orphans || echo "No containers were running or down failed."
 
-#             echo "Pulling db image..."
-#             docker-compose -f \${COMPOSE_FILE} pull db
+            echo "Pulling db image..."
+            docker-compose -f \${COMPOSE_FILE} pull db
 
-#             echo "Building backend image..."
-#             docker-compose -f \${COMPOSE_FILE} build backend
+            echo "Building backend image..."
+            docker-compose -f \${COMPOSE_FILE} build backend
 
-#             echo "Starting containers..."
-#             docker-compose -f \${COMPOSE_FILE} up -d
+            echo "Starting containers..."
+            docker-compose -f \${COMPOSE_FILE} up -d
 
-#             echo "Cleaning up old docker images..."
-#             docker image prune -f || echo "Image prune failed."
+            echo "Cleaning up old docker images..."
+            docker image prune -f || echo "Image prune failed."
 
-#             echo "Deployment script finished."
-#           EOF
-#           echo "Deployment process complete."
+            echo "Deployment script finished."
+          EOF
+          echo "Deployment process complete."
