@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:14
+    container_name: postgres_db_prod
+    restart: always
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+
+  backend:
+    container_name: django_backend_prod
+    build: .
+    restart: always
+    volumes:
+      - media_data_prod:/app/media
+    ports:
+      - "8000:8000" # Публикуем порт Gunicorn
+    environment:
+      # Переменные для settings.py, значения передаются workflow
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG} # Должно быть False
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - DB_PORT=5432
+    depends_on:
+      - db
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             gunicorn core.wsgi:application --bind 0.0.0.0:8000"
+
+volumes:
+  postgres_data_prod:
+  media_data_prod:
