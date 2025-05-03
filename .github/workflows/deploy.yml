@@ -17,7 +17,7 @@ jobs:
 
       - name: Set up SSH Agent and Known Hosts
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+          SSH_PRIVATE_KEY: ${{ vars.SSH_KEY }}
           EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com
         run: |
           eval $(ssh-agent -s)
