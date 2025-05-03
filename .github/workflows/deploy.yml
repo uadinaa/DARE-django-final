@@ -25,7 +25,14 @@ jobs:
 
           echo "Writing SSH key to file..."
           mkdir -p ~/.ssh/
-          echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa # Записываем ключ в файл
+          
+          echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
+          if ! ssh-keygen -l -f ~/.ssh/id_rsa > /dev/null 2>&1; then
+              echo "Invalid SSH key provided." >&2
+              exit 1
+          fi
+          chmod 600 ~/.ssh/id_rsa
+          
           chmod 600 ~/.ssh/id_rsa # Устанавливаем права
 
           echo "Adding SSH key to agent from file..."
