@@ -3,7 +3,7 @@ name: Deploy Backend to EC2
 on:
   push:
     branches:
-      - main 
+      - main
     paths:
       - 'backend/**'
 
@@ -15,48 +15,43 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up SSH
+      - name: Set up SSH Agent and Known Hosts
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
           EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com
-          EC2_USER: ubuntu
         run: |
+          eval $(ssh-agent -s)
+          echo "${SSH_PRIVATE_KEY}" | ssh-add -
           mkdir -p ~/.ssh/
-          echo "${SSH_PRIVATE_KEY}"
-          echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          chmod 700 ~/.ssh/
           ssh-keyscan -H "${EC2_HOST}" >> ~/.ssh/known_hosts
-          echo "SSH setup complete for ${EC2_USER}@${EC2_HOST}"
+          chmod 644 ~/.ssh/known_hosts
+          echo "SSH setup complete."
 
       - name: Deploy to EC2
         env:
           EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com
           EC2_USER: ubuntu
           DEPLOY_DIR: /home/ubuntu/app
-          # Передаем секреты и конфигурацию из GitHub Secrets/Variables
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: fitness_db
           DB_USER: postgres
         run: |
           echo "Starting deployment..."
-          # Копируем папку backend на сервер
-          scp -r -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./backend "${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/"
+          scp -r -o StrictHostKeyChecking=no ./backend "${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/"
           echo "Files copied."
 
-          # Подключаемся к EC2 и выполняем команды docker-compose с prod файлом
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${EC2_USER}@${EC2_HOST}" << EOF
+          ssh -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" << EOF
             echo "Connected to EC2. Running deployment commands..."
-            cd ${DEPLOY_DIR}/backend # Переходим в скопированную папку backend
+            cd ${DEPLOY_DIR}/backend
 
-            # Устанавливаем переменные окружения ДЛЯ КОМАНД docker-compose
-            # Эти переменные будут использованы внутри docker-compose.prod.yml
             export SECRET_KEY='${{ env.SECRET_KEY }}'
             export DEBUG='False'
             export DB_PASSWORD='${{ env.DB_PASSWORD }}'
             export DB_NAME='${{ env.DB_NAME }}'
             export DB_USER='${{ env.DB_USER }}'
-            export DB_HOST=db # Это имя сервиса, не переменная окружения в этом контексте
+            export DB_HOST=db
 
             echo "Using docker-compose.prod.yml"
             COMPOSE_FILE="docker-compose.prod.yml"
@@ -68,15 +63,10 @@ jobs:
             docker-compose -f \${COMPOSE_FILE} pull db
 
             echo "Building backend image..."
-            # Передаем аргументы сборки, если нужно (например, для переменных в Dockerfile)
-            # docker-compose -f \${COMPOSE_FILE} build --no-cache backend # --no-cache для полной пересборки
             docker-compose -f \${COMPOSE_FILE} build backend
 
             echo "Starting containers..."
-            # Переменные окружения уже экспортированы и будут подхвачены docker-compose
             docker-compose -f \${COMPOSE_FILE} up -d
-
-            # Миграции уже включены в command сервиса backend в docker-compose.prod.yml
 
             echo "Cleaning up old docker images..."
             docker image prune -f || echo "Image prune failed."
