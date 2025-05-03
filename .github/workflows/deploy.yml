@@ -21,6 +21,7 @@ jobs:
           EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com
         run: |
           eval $(ssh-agent -s)
+          echo "${SSH_PRIVATE_KEY}"
           echo "${SSH_PRIVATE_KEY}" | ssh-add -
           mkdir -p ~/.ssh/
           chmod 700 ~/.ssh/
