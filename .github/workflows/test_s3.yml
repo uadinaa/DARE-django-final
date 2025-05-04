@@ -36,15 +36,15 @@ jobs:
              echo "✅ Successfully accessed bucket s3://${BUCKET_NAME}/"
           else
              echo "❌ ERROR: Failed to access bucket s3://${BUCKET_NAME}/. Check bucket name and IAM permissions."
-             # Дополнительно можно попробовать загрузить тестовый файл
-             # echo "Attempting to upload a test file..."
-             # echo "test" > test.txt
-             # if aws s3 cp test.txt "s3://${BUCKET_NAME}/github_actions_test.txt"; then
-             #    echo "✅ Test file uploaded successfully."
-             #    aws s3 rm "s3://${BUCKET_NAME}/github_actions_test.txt" # Удаляем тестовый файл
-             # else
-             #    echo "❌ ERROR: Failed to upload test file to s3://${BUCKET_NAME}/."
-             #    exit 1
-             # fi
+             # Дополнительно можно попробовать загрузить тестовый файл\
              exit 1
+          fi
+          echo "Attempting to upload a test file..."
+          echo "test" > test.txt
+          if aws s3 cp test.txt "s3://${BUCKET_NAME}/github_actions_test.txt"; then
+            echo "✅ Test file uploaded successfully."
+            # aws s3 rm "s3://${BUCKET_NAME}/github_actions_test.txt" # Удаляем тестовый файл
+          else
+            echo "❌ ERROR: Failed to upload test file to s3://${BUCKET_NAME}/."
+            exit 1
           fi
