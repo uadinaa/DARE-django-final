@@ -6,3 +6,5 @@ Pillow
 django-cors-headers
 drf-nested-routers
 gunicorn
+boto3
+django-storages
