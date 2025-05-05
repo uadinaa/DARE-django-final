@@ -77,10 +77,10 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.postgresql'),
-        'NAME': os.environ.get('DB_NAME', 'postgres_db'), # Используйте имя из environment docker-compose
-        'USER': os.environ.get('DB_USER', 'postgres'),    # Используйте пользователя из environment docker-compose
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'pass'),# Используйте пароль из environment docker-compose
-        'HOST': os.environ.get('DB_HOST', 'db'),          # <-- Важно: имя сервиса 'db'
+        'NAME': os.environ.get('DB_NAME', 'postgres_db'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'pass'),
+        'HOST': os.environ.get('DB_HOST', 'db'),
         'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
