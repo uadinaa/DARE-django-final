@@ -1,8 +1,10 @@
-# users/models.py
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from imagekit.processors import ResizeToFit
+from imagekit import ImageSpec, register
+from imagekit.models import ProcessedImageField
 
 class Profile(models.Model):
     class Role(models.TextChoices):
@@ -13,7 +15,15 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.USER)
     bio = models.TextField(blank=True, null=True, verbose_name='О себе')
-    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name='Аватар')
+    avatar = ProcessedImageField(
+        upload_to='avatars/',
+        processors=[ResizeToFit(width=200, height=200)],
+        format='JPEG',
+        options={'quality': 85},
+        null=True,
+        blank=True,
+        verbose_name='Аватар'
+    )
     is_blocked = models.BooleanField(default=False, verbose_name='Заблокирован')
 
     def __str__(self):

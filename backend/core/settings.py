@@ -6,18 +6,7 @@ from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = 'django-insecure-xt_ce-7#nn%a3)69wm1#i4^-1-119iz_5&sw+an9t2xtbe49)8'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-
 ALLOWED_HOSTS = ['*']
-
 
 # Application definition
 
@@ -33,6 +22,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'storages',
+    'imagekit',
 
     'users.apps.UsersConfig',
     'posts.apps.PostsConfig',
@@ -85,7 +75,7 @@ DATABASES = {
     }
 }
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'your-default-secret-key-if-env-var-is-not-set')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-xt_ce-7#nn%a3)69wm1#i4^-1-119iz_5&sw+an9t2xtbe49)8')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -111,44 +101,6 @@ TIME_ZONE = 'Asia/Almaty'
 USE_I18N = True
 
 USE_TZ = True
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-            'propagate': False,
-        },
-        # --- Добавляем логгеры для AWS ---
-        'boto3': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-        'botocore': {
-            'handlers': ['console'],
-            'level': 'DEBUG', 
-            'propagate': True,
-        },
-        'storages': {
-            'handlers': ['console'],
-            'level': 'DEBUG', 
-            'propagate': True,
-        }
-    }
-}
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -209,35 +161,3 @@ STORAGES = {
          # },
     },
 }
-
-# AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-# AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-
-# # Название S3 бакета (читаем из переменной окружения)
-# AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-
-# # Имя региона бакета (читаем из переменной окружения)
-# AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'eu-north-1')
-
-# # Указываем Django использовать S3 для хранения медиафайлов по умолчанию
-# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
-# # --- Опциональные, но полезные настройки ---
-
-# # 'public-read' - файлы будут доступны для чтения по прямой ссылке
-# AWS_DEFAULT_ACL = os.environ.get('AWS_DEFAULT_ACL', 'public-read') # Начнем с public-read для простоты
-
-# # Поддиректория внутри бакета для медиафайлов (опционально)
-# AWS_LOCATION = os.environ.get('AWS_LOCATION', 'media')
-
-# MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/{AWS_LOCATION}/'
-
-# # Не перезаписывать файлы с одинаковыми именами (генерировать уникальные)
-# AWS_S3_FILE_OVERWRITE = False
-
-# # Контроль кеширования (опционально)
-# AWS_S3_OBJECT_PARAMETERS = {
-#     'CacheControl': 'max-age=86400', # Кешировать на 1 день
-# }
-
-# AWS_S3_SIGNATURE_VERSION = 's3v4' # Рекомендуется

@@ -2,7 +2,6 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     RegisterView,
-    ProfileViewSet,
     UserProfileUpdateView,
     UserViewSet,
     AdminUserBlockView,
@@ -10,7 +9,6 @@ from .views import (
 )
 
 router = DefaultRouter()
-router.register(r'profiles', ProfileViewSet, basename='profile')
 router.register(r'', UserViewSet, basename='user')
 
 urlpatterns = [

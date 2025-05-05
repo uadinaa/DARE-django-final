@@ -15,11 +15,6 @@ class RegisterView(generics.CreateAPIView):
 class CustomTokenObtainPairView(TokenObtainPairView):
      pass
 
-class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Profile.objects.select_related('user').all()
-    serializer_class = ProfileSerializer
-    permission_classes = [IsAuthenticated] 
-
 class UserProfileUpdateView(generics.RetrieveUpdateAPIView):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
