@@ -176,34 +176,68 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": True,
 }
 
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+# --- Настройки для работы с AWS S3 ---
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "OPTIONS": {
+            "access_key": os.environ.get('AWS_ACCESS_KEY_ID'),
+            "secret_key": os.environ.get('AWS_SECRET_ACCESS_KEY'),
+            "bucket_name": os.environ.get('AWS_STORAGE_BUCKET_NAME'),
+            "region_name": os.environ.get('AWS_S3_REGION_NAME', 'eu-north-1'),
 
-# Название S3 бакета (читаем из переменной окружения)
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-
-# Имя региона бакета (читаем из переменной окружения)
-AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'eu-north-1')
-
-# Указываем Django использовать S3 для хранения медиафайлов по умолчанию
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
-# --- Опциональные, но полезные настройки ---
-
-# 'public-read' - файлы будут доступны для чтения по прямой ссылке
-AWS_DEFAULT_ACL = os.environ.get('AWS_DEFAULT_ACL', 'public-read') # Начнем с public-read для простоты
-
-# Поддиректория внутри бакета для медиафайлов (опционально)
-AWS_LOCATION = os.environ.get('AWS_LOCATION', 'media')
-
-MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/{AWS_LOCATION}/'
-
-# Не перезаписывать файлы с одинаковыми именами (генерировать уникальные)
-AWS_S3_FILE_OVERWRITE = False
-
-# Контроль кеширования (опционально)
-AWS_S3_OBJECT_PARAMETERS = {
-    'CacheControl': 'max-age=86400', # Кешировать на 1 день
+            "default_acl": os.environ.get('AWS_DEFAULT_ACL', 'private'),
+            "location": os.environ.get('AWS_LOCATION', 'media'),
+            "file_overwrite": False,
+            "object_parameters": {
+                'CacheControl': 'max-age=86400',
+            },
+            "signature_version": 's3v4',
+            # "addressing_style": 'virtual',
+            # "endpoint_url": f'https://s3.{os.environ.get("AWS_S3_REGION_NAME", "eu-north-1")}.amazonaws.com',
+            "custom_domain": f'{os.environ.get("AWS_STORAGE_BUCKET_NAME")}.s3.{os.environ.get("AWS_S3_REGION_NAME", "eu-north-1")}.amazonaws.com',
+        },
+    },
+    "staticfiles": {
+         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+         # Для S3:
+         # "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+         # "OPTIONS": {
+         #     # ... настройки AWS для статики ...
+         #     "location": "static", # Обычно отдельная папка для статики
+         #     "default_acl": "public-read", # Статика должна быть публичной
+         # },
+    },
 }
 
-AWS_S3_SIGNATURE_VERSION = 's3v4' # Рекомендуется
+# AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+# AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+
+# # Название S3 бакета (читаем из переменной окружения)
+# AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+
+# # Имя региона бакета (читаем из переменной окружения)
+# AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'eu-north-1')
+
+# # Указываем Django использовать S3 для хранения медиафайлов по умолчанию
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+# # --- Опциональные, но полезные настройки ---
+
+# # 'public-read' - файлы будут доступны для чтения по прямой ссылке
+# AWS_DEFAULT_ACL = os.environ.get('AWS_DEFAULT_ACL', 'public-read') # Начнем с public-read для простоты
+
+# # Поддиректория внутри бакета для медиафайлов (опционально)
+# AWS_LOCATION = os.environ.get('AWS_LOCATION', 'media')
+
+# MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/{AWS_LOCATION}/'
+
+# # Не перезаписывать файлы с одинаковыми именами (генерировать уникальные)
+# AWS_S3_FILE_OVERWRITE = False
+
+# # Контроль кеширования (опционально)
+# AWS_S3_OBJECT_PARAMETERS = {
+#     'CacheControl': 'max-age=86400', # Кешировать на 1 день
+# }
+
+# AWS_S3_SIGNATURE_VERSION = 's3v4' # Рекомендуется
