@@ -5,7 +5,8 @@ from .views import (
     UserProfileUpdateView,
     UserViewSet,
     AdminUserBlockView,
-    AdminUserUnblockView
+    AdminUserUnblockView,
+    MeView
 )
 
 router = DefaultRouter()
@@ -18,4 +19,8 @@ urlpatterns = [
     # Admin actions
     path('<int:pk>/block/', AdminUserBlockView.as_view(), name='admin-user-block'),
     path('<int:pk>/unblock/', AdminUserUnblockView.as_view(), name='admin-user-unblock'),
+
+    path('users/me/', MeView.as_view(), name='user-profile'),
+
+    # return and update the current user’s profile
 ]

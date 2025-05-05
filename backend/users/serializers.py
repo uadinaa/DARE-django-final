@@ -12,6 +12,18 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = ['id', 'role', 'role_display', 'bio', 'avatar', 'is_blocked']
         read_only_fields = ['id', 'role', 'role_display', 'is_blocked']
 
+class ProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    email = serializers.EmailField(source='user.email', read_only=True)
+    role_display = serializers.CharField(source='get_role_display', read_only=True)
+
+    class Meta:
+        model = Profile
+        fields = ['id', 'username', 'role', 'email', 'role_display', 'bio', 'avatar', 'is_blocked']
+        # Редактировать можно только bio и avatar через этот сериализатор
+        read_only_fields = ['id', 'username', 'role', 'role_display', 'is_blocked']
+
+
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(read_only=True)
 
