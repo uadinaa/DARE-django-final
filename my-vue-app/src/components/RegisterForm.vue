@@ -47,7 +47,7 @@
           </form>
           <p class="mt-3 text-center text-muted small d-flex justify-content-center align-items-center">
             <span class="me-1 text-in-span">Уже есть аккаунт?</span>
-            <button @click="$emit('switchToLogin')" class="btn btn-link btn-sm p-0 align-baseline text-success text-decoration-none fw-bold">
+            <button @click="switchToLogin"  class="btn btn-link btn-sm p-0 align-baseline text-success text-decoration-none fw-bold">
               Войти
             </button>
           </p>
@@ -60,18 +60,18 @@
 
 <script setup>
 // --- Скрипт остается тот же ---
-import { ref, reactive, defineEmits } from 'vue';
+import { ref, reactive } from 'vue';
 import axios from 'axios';
+import { useRouter } from 'vue-router';
 
-const emit = defineEmits(['switchToLogin']);
-
+const router = useRouter();
 const formData = reactive({
     username: '', email: '', password: '', password2: '', role: 'user',
 });
 const loading = ref(false);
 const errorMessage = ref('');
 const successMessage = ref('');
-const apiUrl = 'http://localhost:8000/api/users/register/';
+const apiUrl = 'http://ec2-13-53-50-251.eu-north-1.compute.amazonaws.com:8000/api/users/register/';
 
 const handleRegister = async () => {
     loading.value = true; errorMessage.value = ''; successMessage.value = '';
@@ -83,6 +83,7 @@ const handleRegister = async () => {
              username: formData.username, email: formData.email, password: formData.password,
              password2: formData.password2, role: formData.role,
         });
+      // router.push('/login') можно по сути сразу после реги перекинуть в логин?
         successMessage.value = `Пользователь ${response.data.username} успешно зарегистрирован!`;
     } catch (error) {
         if (error.response && error.response.data) {
@@ -95,5 +96,9 @@ const handleRegister = async () => {
         } else { errorMessage.value = 'Произошла ошибка при регистрации.'; }
         console.error('Registration error:', error);
     } finally { loading.value = false; }
+};
+
+const switchToLogin = () => {
+     router.push('/login');
 };
 </script>

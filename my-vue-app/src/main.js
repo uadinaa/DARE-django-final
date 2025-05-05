@@ -12,4 +12,11 @@ import App from './App.vue'
 
 // Удаляем импорт './assets/main.css', он больше не нужен
 
-createApp(App).mount('#app')
+import router from './router'
+// Удаляем импорт './assets/main.css', он больше не нужен
+
+// createApp(App).mount('#app')
+const app = createApp(App)
+
+app.use(router)
+app.mount('#app')

@@ -9,7 +9,7 @@
             <div v-if="errorMessage" class="alert alert-danger text-center small p-2" role="alert">
               {{ errorMessage }}
             </div>
-            <div v-if="successMessage" class="alert alert-success text-center small p-2" role="alert">
+            <div v-else-if="successMessage" class="alert alert-success text-center small p-2" role="alert">
               {{ successMessage }}
             </div>
 
@@ -44,7 +44,7 @@
           </form>
            <p class="mt-3 text-center text-muted small d-flex justify-content-center align-items-center">
              <span class="me-1 text-in-span">Еще нет аккаунта?</span>
-             <button @click="$emit('switchToRegister')" class="btn btn-link btn-sm p-0 align-baseline text-success text-decoration-none fw-bold">
+             <button @click="switchToRegister" class="btn btn-link btn-sm p-0 align-baseline text-success text-decoration-none fw-bold">
                Зарегистрироваться
              </button>
            </p>
@@ -59,14 +59,16 @@
 // --- Скрипт остается тот же ---
 import { ref, reactive, defineEmits } from 'vue';
 import axios from 'axios';
+import { useRouter } from 'vue-router';
 
-const emit = defineEmits(['switchToRegister']);
+const router = useRouter();
 
 const formData = reactive({ username: '', password: '' });
 const loading = ref(false);
 const errorMessage = ref('');
 const successMessage = ref('');
-const apiUrl = 'http://localhost:8000/api/token/';
+const apiUrl = 'http://ec2-13-53-50-251.eu-north-1.compute.amazonaws.com:8000/api/token/';
+const profileApiUrl = '/api/users/user-profile/';
 
 const handleLogin = async () => {
     loading.value = true; errorMessage.value = ''; successMessage.value = '';
@@ -78,8 +80,10 @@ const handleLogin = async () => {
         const accessToken = response.data.access;
         const refreshToken = response.data.refresh;
         successMessage.value = 'Вход выполнен успешно!';
+        await fetchProfileAndRedirect(accessToken);
         console.log('Access Token:', accessToken);
         console.log('Refresh Token:', refreshToken);
+
     } catch (error) {
          if (error.response && error.response.status === 401) {
            errorMessage.value = 'Неверное имя пользователя или пароль.';
@@ -94,4 +98,38 @@ const handleLogin = async () => {
         console.error('Login error:', error);
     } finally { loading.value = false; }
 };
+
+const fetchProfileAndRedirect = async (accessToken) => {
+     try {
+       const profileResponse = await axios.get(profileApiUrl, {
+         headers: { Authorization: `Bearer ${accessToken}` }
+       });
+       const userRole = profileResponse.data.role;
+
+       let targetRoute = '/user-profile'; // Default route
+       if (userRole === 'trainer') {
+         targetRoute = '/trainer-profile';
+       } else if (userRole === 'admin') {
+         targetRoute = '/admin-profile';
+       }
+
+       router.push(targetRoute);
+
+     } catch (profileError) {
+       console.error('Error fetching profile:', profileError);
+       errorMessage.value = 'Ошибка при получении профиля.';
+       //  Optionally, you might want to redirect to a generic error page or stay on login
+     }
+};
+
+
+const switchToRegister = () => {
+     router.push('/register');
+};
+
+
 </script>
+
+
+
+
