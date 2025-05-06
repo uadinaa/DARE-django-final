@@ -148,7 +148,6 @@ STORAGES = {
             "custom_domain": f'{os.environ.get("AWS_STORAGE_BUCKET_NAME")}.s3.{os.environ.get("AWS_S3_REGION_NAME", "eu-north-1")}.amazonaws.com',
         },
     },
-    
     "staticfiles": {
          "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
          # Для S3:
