@@ -5,32 +5,34 @@ from .models import Profile
 
 class ProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
+    email = serializers.EmailField(source='user.email', read_only=True) # Добавлено email
     role_display = serializers.CharField(source='get_role_display', read_only=True)
+    avatar_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
-        fields = ['id', 'role', 'role_display', 'bio', 'avatar', 'is_blocked']
-        read_only_fields = ['id', 'role', 'role_display', 'is_blocked']
+        fields = ['id', 'username', 'role', 'email', 'role_display', 'bio', 'avatar', 'avatar_url', 'is_blocked']
+        read_only_fields = ['id', 'username', 'role', 'email', 'role_display', 'is_blocked', 'avatar_url']
+        # Сделаем 'avatar' write_only, если отдаем только 'avatar_url'
+        extra_kwargs = {'avatar': {'write_only': True}}
 
-class ProfileSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username', read_only=True)
-    email = serializers.EmailField(source='user.email', read_only=True)
-    role_display = serializers.CharField(source='get_role_display', read_only=True)
+    def get_avatar_url(self, obj):
+        request = self.context.get('request')
+        if obj.avatar and hasattr(obj.avatar, 'url') and request:
+            try:
+                return request.build_absolute_uri(obj.avatar.url)
+            except ValueError:
+                return obj.avatar.url
+        return "https://fitness-platform-media.s3.eu-north-1.amazonaws.com/media/default/default-avatar-icon.jpg"
 
-    class Meta:
-        model = Profile
-        fields = ['id', 'username', 'role', 'email', 'role_display', 'bio', 'avatar', 'is_blocked']
-        # Редактировать можно только bio и avatar через этот сериализатор
-        read_only_fields = ['id', 'username', 'role', 'role_display', 'is_blocked']
-
-
+# UserSerializer использует ProfileSerializer выше
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(read_only=True)
 
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'email', 'profile']
-        read_only_fields = ['id', 'username']
+        read_only_fields = ['id', 'username', 'email'] # Email тоже лучше сделать read_only здесь
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
