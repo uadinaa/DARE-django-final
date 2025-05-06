@@ -1,13 +1,19 @@
 <template>
-  <div id="app">
-    <router-view />
-  </div>
+  <AppHeader v-if="$route.name !== 'login' && $route.name !== 'register'" />
+  <router-view />
 </template>
-
 <script setup>
-import { RouterView } from 'vue-router'
+import AppHeader from './components/AppHeader.vue';
 </script>
 
+<style>
+/* Глобальные стили можно оставить в style.css или перенести сюда, если они специфичны для App.vue */
+/* Например, можно задать минимальную высоту для контентной области, чтобы футер (если будет) прижимался книзу */
+.main-content-area {
+  min-height: calc(100vh - 56px - 1rem - 1rem); /* 56px - примерная высота хедера, 1rem*2 - паддинги */
+  /* Это очень приблизительный расчет, лучше использовать flexbox для layout всей страницы, если нужен "липкий" футер */
+}
+</style>
 <!--<script setup>-->
 <!--import { ref } from 'vue';-->
 <!--import RegisterForm from './components/RegisterForm.vue';-->

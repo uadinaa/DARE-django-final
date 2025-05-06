@@ -61,7 +61,7 @@
 <script setup>
 // --- Скрипт остается тот же ---
 import { ref, reactive } from 'vue';
-import axios from 'axios';
+import apiClient from '../services/api.js';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -71,7 +71,6 @@ const formData = reactive({
 const loading = ref(false);
 const errorMessage = ref('');
 const successMessage = ref('');
-const apiUrl = 'http://ec2-13-53-50-251.eu-north-1.compute.amazonaws.com:8000/api/users/register/';
 
 const handleRegister = async () => {
     loading.value = true; errorMessage.value = ''; successMessage.value = '';
@@ -79,7 +78,7 @@ const handleRegister = async () => {
         errorMessage.value = 'Пароли не совпадают.'; loading.value = false; return;
     }
     try {
-        const response = await axios.post(apiUrl, {
+        const response = await apiClient.post('/users/register/', {
              username: formData.username, email: formData.email, password: formData.password,
              password2: formData.password2, role: formData.role,
         });

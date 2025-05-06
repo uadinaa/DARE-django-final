@@ -6,6 +6,7 @@ body {
     background-attachment: fixed;
     min-height: 100vh;
     margin: 0;
+    padding-top: 65px;
   }
   
   .fullscreen-center {
