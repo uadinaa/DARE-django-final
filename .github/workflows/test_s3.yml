@@ -48,3 +48,21 @@ jobs:
             echo "❌ ERROR: Failed to upload test file to s3://${BUCKET_NAME}/."
             exit 1
           fi
+
+      - name: Test PutObjectAcl Permission
+        if: success() # Выполнять только если предыдущие шаги успешны
+        env:
+          BUCKET_NAME: ${{ secrets.AWS_STORAGE_BUCKET_NAME }}
+          TEST_FILE_KEY: github_actions_test.txt # Имя тестового файла
+        run: |
+          echo "Attempting to set public-read ACL on s3://${BUCKET_NAME}/${TEST_FILE_KEY}..."
+          if aws s3api put-object-acl --bucket "${BUCKET_NAME}" --key "${TEST_FILE_KEY}" --acl public-read; then
+             echo "✅ Successfully executed put-object-acl."
+             # Удаляем тестовый файл после всех тестов
+             echo "Cleaning up test file..."
+             aws s3 rm "s3://${BUCKET_NAME}/${TEST_FILE_KEY}"
+          else
+             echo "❌ ERROR: Failed to execute put-object-acl. Check IAM permissions for s3:PutObjectAcl."
+             # Можно оставить тестовый файл для дальнейшей проверки
+             exit 1
+          fi
