@@ -1,7 +1,10 @@
 # interactions/serializers.py
 from rest_framework import serializers
-from .models import Comment, Follow, PostLike
+
 from users.serializers import UserSerializer
+
+from .models import Comment, Follow, PostLike
+
 
 class CommentSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
@@ -9,8 +12,9 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['id', 'post', 'author', 'content', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'author', 'post', 'created_at', 'updated_at']
+        fields = ["id", "post", "author", "content", "created_at", "updated_at"]
+        read_only_fields = ["id", "author", "post", "created_at", "updated_at"]
+
 
 class FollowSerializer(serializers.ModelSerializer):
     follower = UserSerializer(read_only=True)
@@ -18,13 +22,14 @@ class FollowSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Follow
-        fields = ['id', 'follower', 'followed', 'created_at']
-        read_only_fields = ['id', 'follower', 'followed', 'created_at']
+        fields = ["id", "follower", "followed", "created_at"]
+        read_only_fields = ["id", "follower", "followed", "created_at"]
+
 
 class PostLikeSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
 
     class Meta:
         model = PostLike
-        fields = ['id', 'user', 'post', 'created_at']
-        read_only_fields = ['id', 'user', 'created_at']
+        fields = ["id", "user", "post", "created_at"]
+        read_only_fields = ["id", "user", "created_at"]

@@ -1,6 +1,9 @@
 from rest_framework import serializers
-from .models import Post
+
 from users.serializers import UserSerializer
+
+from .models import Post
+
 
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
@@ -9,15 +12,32 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'author', 'content', 'image', 'video', 'created_at', 'updated_at', 'likes_count', 'is_liked_by_user']
-        read_only_fields = ['id', 'author', 'created_at', 'updated_at', 'likes_count', 'is_liked_by_user']
+        fields = [
+            "id",
+            "author",
+            "content",
+            "image",
+            "video",
+            "created_at",
+            "updated_at",
+            "likes_count",
+            "is_liked_by_user",
+        ]
+        read_only_fields = [
+            "id",
+            "author",
+            "created_at",
+            "updated_at",
+            "likes_count",
+            "is_liked_by_user",
+        ]
 
     def get_likes_count(self, obj):
         return obj.likes.count()
 
     def get_is_liked_by_user(self, obj):
         # Получаем текущего пользователя из контекста запроса
-        user = self.context.get('request').user
+        user = self.context.get("request").user
         # Если пользователь не аутентифицирован, он не мог лайкнуть
         if not user or not user.is_authenticated:
             return False
