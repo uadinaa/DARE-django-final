@@ -1,4 +1,5 @@
-name: Deploy Backend to DigitalOcean Droplet
+# .github/workflows/deploy.yml
+name: Deploy App to Droplet
 
 on:
   push:
@@ -6,6 +7,7 @@ on:
       - main
     paths:
       - 'backend/**'
+      - 'my-vue-app/**'
   workflow_dispatch:
 
 jobs:
@@ -30,37 +32,45 @@ jobs:
             echo "❌ ERROR: Invalid SSH key format detected in secret." >&2
             exit 1
           fi
-          ssh-keyscan -H "${DROPLET_HOST}" >> ~/.ssh/known_hosts # Используем DROPLET_HOST
+          ssh-keyscan -H "${DROPLET_HOST}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
       - name: Deploy to Droplet
         env:
           DROPLET_HOST: 139.59.64.140
-          DROPLET_USER: root
-          DEPLOY_DIR: /root/app/backend
+          DROPLET_USER: root # или ваш пользователь
+          BACKEND_DEPLOY_DIR: /root/app/backend
+          FRONTEND_DEPLOY_DIR: /root/app/my-vue-app
 
-          # --- Django & DB Secrets/Config ---
+          # --- Секреты и конфигурация ---
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: fitness_db
           DB_USER: postgres
-          # --- AWS S3 Secrets/Config ---
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_STORAGE_BUCKET_NAME: ${{ secrets.AWS_STORAGE_BUCKET_NAME }}
           AWS_S3_REGION_NAME: ${{ secrets.AWS_S3_REGION_NAME }}
-          AWS_DEFAULT_ACL: 'private' # Как мы решили для S3
+          AWS_DEFAULT_ACL: 'private'
           AWS_LOCATION: 'media'
         run: |
           KEY_FILE_PATH=~/.ssh/id_rsa_deploy
-          # Создаем директорию для деплоя на Droplet
-          ssh -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} "${DROPLET_USER}@${DROPLET_HOST}" "mkdir -p ${DEPLOY_DIR}"
-          # Копируем файлы
-          scp -r -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} ./backend/* "${DROPLET_USER}@${DROPLET_HOST}:${DEPLOY_DIR}/"
 
-          # Выполняем команды на Droplet
+          # Создаем базовую директорию и директории для фронтенда и бэкенда на Droplet
+          ssh -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} "${DROPLET_USER}@${DROPLET_HOST}" "mkdir -p ${BACKEND_DEPLOY_DIR} && mkdir -p ${FRONTEND_DEPLOY_DIR}"
+          
+          echo "Copying backend files to Droplet..."
+          scp -r -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} ./backend/* "${DROPLET_USER}@${DROPLET_HOST}:${BACKEND_DEPLOY_DIR}/"
+          echo "Backend files copied."
+
+          echo "Copying frontend files to Droplet..."
+          scp -r -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} ./my-vue-app/* "${DROPLET_USER}@${DROPLET_HOST}:${FRONTEND_DEPLOY_DIR}/"
+          echo "Frontend files copied."
+
+          # Подключаемся к Droplet и выполняем команды docker-compose из папки backend
           ssh -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} "${DROPLET_USER}@${DROPLET_HOST}" << EOF
-            cd ${DEPLOY_DIR}
+            echo "Connected to Droplet. Running deployment commands..."
+            cd ${BACKEND_DEPLOY_DIR} # Переходим в директорию бэкенда, где лежит docker-compose.prod.yml
 
             export SECRET_KEY='${{ env.SECRET_KEY }}'
             export DEBUG='False'
@@ -77,20 +87,20 @@ jobs:
 
             COMPOSE_FILE="docker-compose.prod.yml"
             if [ ! -f "\${COMPOSE_FILE}" ]; then
-              echo "ERROR: \${COMPOSE_FILE} not found in ${DEPLOY_DIR}!"
-              if [ -f "docker-compose.yml" ]; then
-                COMPOSE_FILE="docker-compose.yml"
-                echo "WARNING: Using docker-compose.yml as fallback."
-              else
-                exit 1
-              fi
+              echo "ERROR: \${COMPOSE_FILE} not found in ${BACKEND_DEPLOY_DIR}!"
+              exit 1
             fi
             echo "Using \${COMPOSE_FILE}"
 
             docker compose -f \${COMPOSE_FILE} down --remove-orphans || echo "Docker down failed or no containers running."
-            docker compose -f \${COMPOSE_FILE} pull db
-            docker compose -f \${COMPOSE_FILE} build backend
+            echo "Pulling base images..."
+            docker compose -f \${COMPOSE_FILE} pull # Pulls all defined service images (db, redis, nginx base)
+            echo "Building application images..."
+            docker compose -f \${COMPOSE_FILE} build # Builds backend and frontend
+            echo "Starting all containers..."
             docker compose -f \${COMPOSE_FILE} up -d
+            
+            echo "Cleaning up old docker images..."
             docker image prune -f || echo "Image prune failed."
             echo "Deployment script finished on Droplet."
           EOF

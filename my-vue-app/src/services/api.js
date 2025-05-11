@@ -1,9 +1,7 @@
-// src/services/api.js
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'http://ec2-13-53-50-251.eu-north-1.compute.amazonaws.com:8000/api', // Ваш базовый URL API
-  // timeout: 1000, // Можете добавить таймаут, если нужно
+  baseURL: 'http://139.59.64.140:8000/api', // Ваш базовый URL API
 });
 
 // Интерцептор запросов: добавляет токен авторизации к каждому запросу, если он есть

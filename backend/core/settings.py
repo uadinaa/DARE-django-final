@@ -191,7 +191,7 @@ from celery.schedules import crontab
 CELERY_BEAT_SCHEDULE = {
     'calculate-trainer-levels-every-minute': {
         'task': 'calculate_all_trainer_levels',
-        'schedule': crontab(minute=0, hour='*'),
+        'schedule': crontab(minute=0, hour='*'), # Каждый час
     },
     'generate-daily-activity-at-1am': {
         'task': 'generate_daily_user_activity',
