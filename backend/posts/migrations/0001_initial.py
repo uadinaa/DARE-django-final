@@ -15,20 +15,57 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Post',
+            name="Post",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('content', models.TextField(verbose_name='Содержание')),
-                ('image', models.ImageField(blank=True, null=True, upload_to='post_images/', verbose_name='Изображение')),
-                ('video', models.FileField(blank=True, null=True, upload_to='post_videos/', verbose_name='Видео')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Создано')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Обновлено')),
-                ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='posts', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("content", models.TextField(verbose_name="Содержание")),
+                (
+                    "image",
+                    models.ImageField(
+                        blank=True,
+                        null=True,
+                        upload_to="post_images/",
+                        verbose_name="Изображение",
+                    ),
+                ),
+                (
+                    "video",
+                    models.FileField(
+                        blank=True,
+                        null=True,
+                        upload_to="post_videos/",
+                        verbose_name="Видео",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Создано"),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, verbose_name="Обновлено"),
+                ),
+                (
+                    "author",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="posts",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Пост',
-                'verbose_name_plural': 'Посты',
-                'ordering': ['-created_at'],
+                "verbose_name": "Пост",
+                "verbose_name_plural": "Посты",
+                "ordering": ["-created_at"],
             },
         ),
     ]
