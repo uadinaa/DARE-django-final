@@ -11,7 +11,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['id', 'username', 'role', 'email', 'role_display', 'bio', 'avatar', 'avatar_url', 'is_blocked']
+        fields = ['id', 'username', 'role', 'email', 'role_display', 'bio', 'avatar', 'avatar_url', 'is_blocked', 'can_monetize_posts']
         read_only_fields = ['id', 'username', 'role', 'email', 'role_display', 'is_blocked', 'avatar_url']
         # Сделаем 'avatar' write_only, если отдаем только 'avatar_url'
         extra_kwargs = {'avatar': {'write_only': True}}

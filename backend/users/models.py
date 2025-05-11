@@ -25,6 +25,9 @@ class Profile(models.Model):
         verbose_name='Аватар'
     )
     is_blocked = models.BooleanField(default=False, verbose_name='Заблокирован')
+    can_monetize_posts = models.BooleanField(default=False, verbose_name='Может монетизировать посты')
+    level_score = models.IntegerField(default=0, verbose_name='Общий уровень/ранк')
+    levels_last_calculated_at = models.DateTimeField(null=True, blank=True, verbose_name='Дата последнего расчета уровней')
 
     def __str__(self):
         return f"{self.user.username} ({self.get_role_display()})"
