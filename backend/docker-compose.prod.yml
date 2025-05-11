@@ -107,7 +107,7 @@ services:
       - redis
       - db
 
-    frontend:
+  frontend:
     container_name: vue_frontend_prod
     build:
       context: ../my-vue-app
