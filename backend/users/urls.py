@@ -12,12 +12,12 @@ from .views import (
 )
 
 router = DefaultRouter()
-router.register(r"users", UserViewSet, basename="user")
+router.register(r"", UserViewSet, basename="user")
 
 urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
-    path("users/me/", CurrentUserDetailView.as_view(), name="current-user-detail"), # <-- НОВЫЙ URL
-    path("users/me/profile/", UserProfileUpdateView.as_view(), name="current-user-profile-update"),
+    path("me/", CurrentUserDetailView.as_view(), name="current-user-detail"),
+    path("me/profile/", UserProfileUpdateView.as_view(), name="current-user-profile-update"),
     path("", include(router.urls)),
     path('trainers/top/', TopTrainersListView.as_view(), name='top-trainers-list'),
     # Admin actions
