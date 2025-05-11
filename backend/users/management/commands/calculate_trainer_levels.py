@@ -1,121 +1,108 @@
-# users/management/commands/calculate_trainer_levels.py
-
 import math
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 from datetime import timedelta
-from users.models import Profile # Модель профиля
-from posts.models import Post   # Модель постов для подсчета их количества
-from interactions.models import Follow, PostLike, Comment # Модели для метрик
+from django.db import transaction
+
+from users.models import Profile
+from interactions.models import Follow, PostLike, Comment
+from posts.models import Post  # Import for actual post count
+
+# === Configuration Constants ===
+SUBSCRIBER_BASE_A = 10
+SUBSCRIBER_FACTOR_B = 3.0
+
+ENGAGEMENT_BASE_A = 4    # For mapping average engagement to level
+ENGAGEMENT_FACTOR_B = 2.0
+
+RECENT_SUB_BASE_A = 4
+RECENT_SUB_FACTOR_B = 2.5
+
+RECENT_ENG_BASE_A = 10
+RECENT_ENG_FACTOR_B = 3.0
+
+RECENT_DAYS = 30
 
 class Command(BaseCommand):
     help = 'Calculates and updates trainer level scores based on various metrics.'
 
-    def get_level_from_formula(self, current_value, base_A, factor_B):
-        """
-        Рассчитывает уровень n по формуле Value = A * (B^(n-1)).
-        Если current_value < A (т.е. меньше порога для 1-го уровня), возвращает 0.
-        Иначе, n = floor(log_B(current_value / A)) + 1.
-        """
-        if current_value < base_A:
+    def get_subscribers_for_level(self, level_n: int) -> int:
+        if level_n < 1:
             return 0
-        if base_A <= 0 or factor_B <= 1 or current_value < 0: # Проверка корректности аргументов
-            return 0
+        return int(SUBSCRIBER_BASE_A * (SUBSCRIBER_FACTOR_B ** (level_n - 1)))
 
-        # Рассчитываем (n-1)
-        # current_value / base_A = factor_B ^ (n-1)
-        # log_factor_B (current_value / base_A) = n-1
+    def get_level_from_formula(self, value: float, base_A: float, factor_B: float) -> int:
+        if value < base_A or base_A <= 0 or factor_B <= 1:
+            return 0
         try:
-            n_minus_1 = math.log(current_value / base_A, factor_B)
-            level = math.floor(n_minus_1) + 1
-            return max(1, level) # Уровень не может быть меньше 1, если порог A достигнут
-        except ValueError: # Например, логарифм от отрицательного числа или нуля
-            return 0
-
-
-    def get_average_engagement_score(self, trainer_user):
-        """
-        Рассчитывает компонентный балл за среднее вовлечение на пост за все время.
-        """
-        total_posts = Post.objects.filter(author=trainer_user).count()
-        if total_posts == 0:
-            return 0
-
-        total_likes = PostLike.objects.filter(post__author=trainer_user).count()
-        total_comments = Comment.objects.filter(post__author=trainer_user).count()
-
-        average_engagement = (total_likes + total_comments) / total_posts
-
-        # Простая система баллов на основе среднего вовлечения (можно настроить)
-        if average_engagement >= 20:
-            return 5 # Максимальный балл/уровень за этот компонент
-        elif average_engagement >= 10:
-            return 3
-        elif average_engagement >= 5:
-            return 2
-        elif average_engagement >= 1: # Хотя бы какое-то вовлечение
-            return 1
-        else:
+            n_minus_1 = math.log(value / base_A) / math.log(factor_B)
+            return max(1, math.floor(n_minus_1) + 1)
+        except (ValueError, ZeroDivisionError):
             return 0
 
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS('Starting trainer level calculation...'))
 
-        thirty_days_ago = timezone.now() - timedelta(days=30)
+        now = timezone.now()
+        recent_threshold = now - timedelta(days=RECENT_DAYS)
 
-        # Получаем только профили тренеров
-        trainer_profiles = Profile.objects.filter(role=Profile.Role.TRAINER).select_related('user')
+        trainers = Profile.objects.filter(role=Profile.Role.TRAINER).select_related('user')
+        total = trainers.count()
+        self.stdout.write(f'Found {total} trainers to process.')
 
-        for profile in trainer_profiles:
+        for idx, profile in enumerate(trainers, start=1):
             trainer = profile.user
-            self.stdout.write(f"Calculating levels for trainer: {trainer.username} (ID: {trainer.id})")
+            self.stdout.write(f'[{idx}/{total}] Processing: {trainer.username} (ID {trainer.id})')
 
-            component_levels = []
+            try:
+                # 1) Level from total subscribers
+                subs_total = Follow.objects.filter(followed=trainer).count()
+                lvl_subs = self.get_level_from_formula(subs_total, SUBSCRIBER_BASE_A, SUBSCRIBER_FACTOR_B)
 
-            # 1. Уровень по общему количеству подписчиков
-            # S(n) = 100 * 3^(n-1)
-            total_subscribers = Follow.objects.filter(followed=trainer).count()
-            total_subscriber_level = self.get_level_from_formula(total_subscribers, 100, 3)
-            component_levels.append(total_subscriber_level)
-            self.stdout.write(f"  Total subscribers: {total_subscribers}, Level component: {total_subscriber_level}")
+                # 2) Level from actual average engagement per post (all time)
+                total_likes_all = PostLike.objects.filter(post__author=trainer).count()
+                total_comments_all = Comment.objects.filter(post__author=trainer).count()
+                total_engagement_all = total_likes_all + total_comments_all
+                post_count = Post.objects.filter(author=trainer).count()
+                avg_engagement = (total_engagement_all / post_count) if post_count > 0 else 0
+                lvl_avg_eng = self.get_level_from_formula(avg_engagement, ENGAGEMENT_BASE_A, ENGAGEMENT_FACTOR_B)
 
-            # 2. Балл за среднее вовлечение на пост (за все время)
-            avg_engagement_score = self.get_average_engagement_score(trainer)
-            component_levels.append(avg_engagement_score)
-            self.stdout.write(f"  Average engagement score: {avg_engagement_score}")
+                # 3) Level from recent subscriber gain
+                subs_recent = Follow.objects.filter(
+                    followed=trainer,
+                    created_at__gte=recent_threshold
+                ).count()
+                lvl_recent_subs = self.get_level_from_formula(subs_recent, RECENT_SUB_BASE_A, RECENT_SUB_FACTOR_B)
 
-            # 3. Уровень по приросту подписчиков за последние 30 дней
-            # S_30(n) = 10 * (2.5)^(n-1)
-            recent_subscribers_gain = Follow.objects.filter(
-                followed=trainer, 
-                created_at__gte=thirty_days_ago
-            ).count()
-            recent_subscriber_gain_level = self.get_level_from_formula(recent_subscribers_gain, 10, 2.5)
-            component_levels.append(recent_subscriber_gain_level)
-            self.stdout.write(f"  Recent subscribers gain: {recent_subscribers_gain}, Level component: {recent_subscriber_gain_level}")
+                # 4) Level from recent total engagement
+                likes_recent = PostLike.objects.filter(
+                    post__author=trainer,
+                    created_at__gte=recent_threshold
+                ).count()
+                comments_recent = Comment.objects.filter(
+                    post__author=trainer,
+                    created_at__gte=recent_threshold
+                ).count()
+                total_eng_recent = likes_recent + comments_recent
+                lvl_recent_eng = self.get_level_from_formula(total_eng_recent, RECENT_ENG_BASE_A, RECENT_ENG_FACTOR_B)
 
-            # 4. Уровень по общему вовлечению за последние 30 дней
-            # Используем формулу S(n) = 100 * 3^(n-1)
-            recent_likes = PostLike.objects.filter(
-                post__author=trainer,
-                created_at__gte=thirty_days_ago
-            ).count()
-            recent_comments = Comment.objects.filter(
-                post__author=trainer,
-                created_at__gte=thirty_days_ago
-            ).count()
-            total_recent_engagement = recent_likes + recent_comments
-            recent_engagement_level = self.get_level_from_formula(total_recent_engagement, 100, 3)
-            component_levels.append(recent_engagement_level)
-            self.stdout.write(f"  Recent engagement (likes: {recent_likes}, comments: {recent_comments}): {total_recent_engagement}, Level component: {recent_engagement_level}")
+                # Sum components for final score
+                final_score = lvl_subs + lvl_avg_eng + lvl_recent_subs + lvl_recent_eng
 
-            # Суммируем все компонентные уровни/очки
-            final_level_score = sum(component_levels)
+                # Save atomically
+                with transaction.atomic():
+                    profile.level_score = final_score
+                    profile.levels_last_calculated_at = now
+                    profile.save(update_fields=['level_score', 'levels_last_calculated_at'])
 
-            profile.level_score = final_level_score
-            profile.levels_last_calculated_at = timezone.now()
-            profile.save()
+                self.stdout.write(self.style.SUCCESS(
+                    f"  -> subs_total={subs_total}(lvl {lvl_subs}), "
+                    f"avg_engagement={avg_engagement:.2f}(lvl {lvl_avg_eng}), "
+                    f"subs_recent={subs_recent}(lvl {lvl_recent_subs}), "
+                    f"eng_recent={total_eng_recent}(lvl {lvl_recent_eng}) => score={final_score}"
+                ))
 
-            self.stdout.write(self.style.SUCCESS(f"  Trainer {trainer.username} new level_score: {final_level_score}"))
+            except Exception as e:
+                raise CommandError(f"Error processing {trainer.username}: {e}")
 
         self.stdout.write(self.style.SUCCESS('Trainer level calculation finished.'))
