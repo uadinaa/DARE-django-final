@@ -89,33 +89,49 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Created {NUM_POSTS_PER_TRAINER * len(self.all_trainers)} posts."))
 
     def _create_follows(self):
-        self.stdout.write("Creating follows...")
-        # Популярный тренер
-        # Общее кол-во: 500. Из них 100 за последние 30 дней.
-        num_recent_follows_pt = 100
-        num_older_follows_pt = 400
+            self.stdout.write("Creating follows...")
+            
+            # Скорректируем цели для 50 пользователей, или увеличьте NUM_REGULAR_USERS
+            # Популярный тренер
+            # Общее кол-во: например, 40. Из них 15 за последние 30 дней.
+            num_recent_follows_pt = 15 
+            num_older_follows_pt = 25
+            
+            # Средний тренер
+            # Общее кол-во: например, 20. Из них 5 за последние 30 дней.
+            num_recent_follows_mpt = 5
+            num_older_follows_mpt = 15
 
-        # Средний тренер
-        # Общее кол-во: 150. Из них 30 за последние 30 дней.
-        num_recent_follows_mpt = 30
-        num_older_follows_mpt = 120
+            # Подписчики для популярного тренера
+            # Позволяем пользователям быть подписанными на обоих тренеров, если выборка это позволит
+            followers_pt_sample_size = min(len(self.regular_users), num_recent_follows_pt + num_older_follows_pt)
+            followers_pt = random.sample(self.regular_users, followers_pt_sample_size)
+            
+            for i, user in enumerate(followers_pt):
+                days_ago = random.randint(1, 29) if i < num_recent_follows_pt else random.randint(30, 365)
+                follow_date = TODAY - timedelta(days=days_ago)
+                # Устанавливаем кастомную дату created_at для Follow
+                Follow.objects.update_or_create(
+                    follower=user, 
+                    followed=self.popular_trainer_user, 
+                    defaults={'created_at': follow_date}
+                )
 
-        # Подписчики для популярного тренера
-        followers_pt = random.sample(self.regular_users, min(len(self.regular_users), num_recent_follows_pt + num_older_follows_pt))
-        for i, user in enumerate(followers_pt):
-            days_ago = random.randint(1, 29) if i < num_recent_follows_pt else random.randint(30, 365)
-            follow_date = TODAY - timedelta(days=days_ago)
-            Follow.objects.get_or_create(follower=user, followed=self.popular_trainer_user, defaults={'created_at': follow_date})
 
-        # Подписчики для среднего тренера
-        available_users_for_mpt = [u for u in self.regular_users if u not in followers_pt] # Чтобы не было дублей прям всех
-        followers_mpt = random.sample(available_users_for_mpt, min(len(available_users_for_mpt), num_recent_follows_mpt + num_older_follows_mpt))
-        for i, user in enumerate(followers_mpt):
-            days_ago = random.randint(1, 29) if i < num_recent_follows_mpt else random.randint(30, 365)
-            follow_date = TODAY - timedelta(days=days_ago)
-            Follow.objects.get_or_create(follower=user, followed=self.moderate_trainer_user, defaults={'created_at': follow_date})
-        self.stdout.write(self.style.SUCCESS("Created follows."))
+            # Подписчики для среднего тренера
+            followers_mpt_sample_size = min(len(self.regular_users), num_recent_follows_mpt + num_older_follows_mpt)
+            followers_mpt = random.sample(self.regular_users, followers_mpt_sample_size)
 
+            for i, user in enumerate(followers_mpt):
+                days_ago = random.randint(1, 29) if i < num_recent_follows_mpt else random.randint(30, 365)
+                follow_date = TODAY - timedelta(days=days_ago)
+                Follow.objects.update_or_create(
+                    follower=user, 
+                    followed=self.moderate_trainer_user, 
+                    defaults={'created_at': follow_date}
+                )
+            self.stdout.write(self.style.SUCCESS("Created or updated follows."))
+            
     def _create_likes_and_comments(self):
             self.stdout.write("Creating likes and comments...")
             for trainer_id, posts in self.all_posts_map.items():
