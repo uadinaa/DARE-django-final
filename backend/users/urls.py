@@ -7,6 +7,7 @@ from .views import (
     RegisterView,
     UserProfileUpdateView,
     UserViewSet,
+    TopTrainersListView
 )
 
 router = DefaultRouter()
@@ -16,6 +17,7 @@ urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
     path("profile/", UserProfileUpdateView.as_view(), name="user-profile-update"),
     path("", include(router.urls)),
+    path('trainers/top/', TopTrainersListView.as_view(), name='top-trainers-list'),
     # Admin actions
     path("<int:pk>/block/", AdminUserBlockView.as_view(), name="admin-user-block"),
     path(

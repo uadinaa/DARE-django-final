@@ -9,16 +9,12 @@ class Post(models.Model):
     content = models.TextField(verbose_name="Содержание")
     image = ProcessedImageField(
         upload_to="post_images/",
-        processors=[ResizeToFit(width=300, height=300)],
+        processors=[ResizeToFit(width=500, height=500)],
         format="JPEG",
-        options={"quality": 80},
+        options={"quality": 95},
         null=True,
         blank=True,
         verbose_name="Изображение",
-    )
-    # Для простоты сделаем одно изображение и одно видео.
-    video = models.FileField(
-        upload_to="post_videos/", null=True, blank=True, verbose_name="Видео"
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создано")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлено")

@@ -1,4 +1,3 @@
-// src/main.js
 import { createApp } from 'vue'
 
 // 1. Импортируем Bootstrap ПЕРВЫМ
@@ -9,14 +8,8 @@ import './style.css' // Убедитесь, что путь правильный
 
 // 3. Импортируем App ПОСЛЕ стилей
 import App from './App.vue'
-
-// Удаляем импорт './assets/main.css', он больше не нужен
-
 import router from './router'
-// Удаляем импорт './assets/main.css', он больше не нужен
 
-// createApp(App).mount('#app')
 const app = createApp(App)
-
 app.use(router)
 app.mount('#app')

@@ -1,40 +1,102 @@
 services:
   db:
     image: postgres:14
-    container_name: postgres_db
+    container_name: postgres_db_dev # Используем суффикс _dev для локальных контейнеров
     restart: always
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - postgres_data_dev:/var/lib/postgresql/data/ # Отдельный volume для разработки
     environment:
-      - POSTGRES_DB=fitness_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=pass
+      # Эти значения используются PostgreSQL для создания БД/пользователя
+      - POSTGRES_DB=fitness_db_dev # Можно использовать отдельное имя БД для разработки
+      - POSTGRES_USER=postgres_dev # Отдельный пользователь
+      - POSTGRES_PASSWORD=pass_dev   # Отдельный пароль
     ports:
-      - "5432:5432"
+      - "5432:5432" # Оставляем для возможного подключения к БД с хоста
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis_broker_dev # Суффикс _dev
+    restart: always
+    ports:
+      - "6379:6379" # Опционально, для доступа с хоста
+    volumes:
+      - redis_data_dev:/data # Отдельный volume
 
   backend:
-    container_name: django_backend
-    build: .
+    container_name: django_backend_dev # Суффикс _dev
+    build: . # Собираем образ из Dockerfile в текущей директории (backend/)
     restart: unless-stopped
     volumes:
-      - .:/app
-      - ./media:/app/media
+      - .:/app # <-- Монтируем текущий код для live reload
+      - ./media_dev:/app/media # Отдельная папка для медиа в разработке (если не используете S3 локально)
     ports:
-      - "8000:8000"
+      - "8000:8000" # Пробрасываем порт Django
     environment:
-      - SECRET_KEY=django-insecure-xt_ce-7#nn%a3)69wm1#i4^-1-119iz_5&sw+an9t2xtbe49)8
-      - DEBUG=True
+      - SECRET_KEY=local_django_insecure_secret_key_fitness # Локальный ключ, НЕ ИСПОЛЬЗУЙТЕ В ПРОДЕ
+      - DEBUG=True  
       - DB_ENGINE=django.db.backends.postgresql
-      - DB_NAME=fitness_db
-      - DB_USER=postgres
-      - DB_PASSWORD=pass
-      - DB_HOST=db
+      - DB_NAME=fitness_db_dev # Соответствует POSTGRES_DB в сервисе db
+      - DB_USER=postgres_dev   # Соответствует POSTGRES_USER
+      - DB_PASSWORD=pass_dev   # Соответствует POSTGRES_PASSWORD
+      - DB_HOST=db 
       - DB_PORT=5432
+
+      # Настройки Celery
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     depends_on:
       - db
+      - redis
     command: >
       sh -c "python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:8000"
+             python manage.py runserver 0.0.0.0:8000" # <-- Используем runserver для разработки
+
+  celery_worker:
+    build: .
+    container_name: celery_worker_dev
+    restart: unless-stopped
+    volumes:
+      - .:/app 
+    command: celery -A core worker -l INFO -P solo -c 1
+    environment:
+   
+      - SECRET_KEY=local_django_insecure_secret_key_fitness
+      - DEBUG=True
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=fitness_db_dev
+      - DB_USER=postgres_dev
+      - DB_PASSWORD=pass_dev
+      - DB_HOST=db
+      - DB_PORT=5432
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+      - db
+
+  celery_beat:
+    build: .
+    container_name: celery_beat_dev # Суффикс _dev
+    restart: unless-stopped
+    volumes:
+      - .:/app # Монтируем код
+    command: celery -A core beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    environment:
+      # ВСЕ ТЕ ЖЕ переменные окружения, что и для backend
+      - SECRET_KEY=local_django_insecure_secret_key_fitness
+      - DEBUG=True
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=fitness_db_dev
+      - DB_USER=postgres_dev
+      - DB_PASSWORD=pass_dev
+      - DB_HOST=db
+      - DB_PORT=5432
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+      - db
 
 volumes:
-  postgres_data:
+  postgres_data_dev: # Отдельный volume для разработки
+  redis_data_dev:    # Отдельный volume для разработки

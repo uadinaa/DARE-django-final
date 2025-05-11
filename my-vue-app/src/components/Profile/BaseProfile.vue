@@ -1,4 +1,3 @@
-// BaseProfile.vue
    <template>
      <div class="profile-container">
        <header class="profile-header">

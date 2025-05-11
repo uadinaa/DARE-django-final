@@ -1,0 +1,111 @@
+@import 'src/assets/base.css'; 
+
+/* Глобальные стили для body (градиент и отступ для хедера) */
+body {
+  background-image: linear-gradient(to bottom right, var(--color-background-dark-secondary), var(--color-background-dark));
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Стили для корневого элемента приложения #app */
+#app {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: var(--default-padding);
+  font-weight: normal;
+}
+
+/* Общие стили для ссылок */
+a {
+  text-decoration: none;
+  color: var(--color-accent);
+  transition: 0.4s;
+  padding: 3px;
+}
+
+@media (hover: hover) {
+  a:hover {
+    background-color: var(--color-accent-hover);
+  }
+}
+
+/* Утилитарный класс для центрирования */
+.fullscreen-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - var(--header-height)); /* Учитываем высоту хедера */
+  /* padding: var(--default-padding); /* Можно добавить, если нужно */
+}
+
+/* Стили для темных форм (адаптированы под переменные) */
+.form-control-dark, 
+.form-select-dark {
+  background-color: #343a40; /* Можно вынести в переменную, если часто используется */
+  color: var(--color-text-dark-theme);
+  border-color: var(--color-border-dark-theme);
+}
+
+.form-control-dark::placeholder {
+  color: var(--color-text-muted-dark-theme);
+}
+
+.form-control-dark:focus, 
+.form-select-dark:focus {
+  background-color: #343a40;
+  color: var(--color-text-dark-theme);
+  border-color: var(--color-accent); /* Используем акцентный цвет */
+  box-shadow: 0 0 0 0.25rem var(--color-accent-hover);
+}
+
+.form-select-dark option {
+    background-color: #495057; 
+    color: var(--color-text-dark-theme);
+}
+
+/* Стили для текста внутри span (если это общий стиль) */
+.text-in-span { /* Вы назвали его так в HTML */
+  color: var(--color-text-dark-theme); 
+}
+
+/* Общие стили для карточек на темном фоне (Пример, как можно расширить Bootstrap) */
+.card.bg-dark { /* Если используете Bootstrap класс .bg-dark */
+    background-color: var(--color-card-bg-dark) !important; /* Переопределяем Bootstrap, если нужно */
+    border-color: var(--color-border-dark-theme) !important;
+}
+
+.card-title.text-success { /* Если используете Bootstrap класс .text-success для заголовков */
+    color: var(--color-accent) !important;
+}
+
+.card-footer.text-muted { /* Если используете Bootstrap класс .text-muted */
+    color: var(--color-text-muted-dark-theme) !important;
+    border-top: 1px solid var(--color-border-dark-theme);
+}
+
+/* Медиа-запросы для адаптивной сетки (если они все еще актуальны и не конфликтуют с Bootstrap) */
+/* Этот блок был в вашем assets/main.css. Он может конфликтовать с .fullscreen-center 
+   или с вашими лейаутами, поэтому используйте его с осторожностью или адаптируйте.
+   Для начала можно закомментировать. */
+/*
+@media (min-width: 1024px) {
+  body {
+    display: flex; // Это может сломать fixed-top header и fullscreen-center
+    place-items: center;
+  }
+
+  #app {
+    display: grid;
+    grid-template-columns: 1fr 1fr; // Это очень специфичный макет для всего #app
+    padding: 0 2rem;
+  }
+}
+*/
+
+/* Стили для контентной области при использовании фиксированного сайдбара */
+/* Эти стили должны быть применены к элементу <main> или его обертке в MainLayout.vue */
+.content-area-with-sidebar {
+  margin-left: var(--sidebar-width); /* Отступ равный ширине сайдбара */
+  padding: var(--default-padding);
+  width: calc(100% - var(--sidebar-width)); /* Занимает оставшуюся ширину */
+}

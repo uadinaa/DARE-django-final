@@ -36,6 +36,19 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all().select_related("profile")
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
+    
+class TopTrainersListView(generics.ListAPIView):
+    """
+    Возвращает список топ-10 тренеров, отсортированных по их level_score.
+    """
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = User.objects.filter(profile__role=Profile.Role.TRAINER)\
+                               .select_related('profile')\
+                               .order_by('-profile__level_score')[:10]
+        return queryset
 
 
 # --- Admin Actions ---
