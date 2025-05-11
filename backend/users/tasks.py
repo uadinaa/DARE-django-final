@@ -16,3 +16,15 @@ def calculate_all_trainer_levels_task():
         logger.info("Successfully finished calculation of trainer levels.")
     except Exception as e:
         logger.error(f"Error during scheduled calculation of trainer levels: {e}", exc_info=True)
+        
+@shared_task(name="generate_daily_user_activity")
+def generate_daily_activity_task():
+    """
+    Celery задача для запуска generate_daily_activity.
+    """
+    try:
+        logger.info("Starting scheduled daily activity generation...")
+        call_command('generate_daily_activity')
+        logger.info("Successfully finished daily activity generation.")
+    except Exception as e:
+        logger.error(f"Error during scheduled daily activity generation: {e}", exc_info=True)
