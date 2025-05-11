@@ -121,48 +121,35 @@ class Command(BaseCommand):
             for trainer_id, posts in self.all_posts_map.items():
                 trainer = User.objects.get(id=trainer_id)
                 for post in posts:
-                    # Лайки
+                    # Лайки (эта часть кода, похоже, была в порядке)
                     num_likes = random.randint(20, 50) if trainer == self.popular_trainer_user else random.randint(5, 15)
                     likers = random.sample(self.regular_users, min(len(self.regular_users), num_likes))
                     for liker in likers:
-                        # Исправляем расчет разницы в днях для like_date
                         max_days_offset = (TODAY - post.created_at).days
-                        if max_days_offset <= 0: # Если пост создан "сегодня" или в будущем (маловероятно)
-                            max_days_offset = 1 # Лайк может быть в тот же день
-
-                        # Генерируем дату лайка после создания поста, но до "сегодня"
+                        if max_days_offset <= 0: 
+                            max_days_offset = 1
                         days_after_post = random.randint(0, max_days_offset -1 if max_days_offset > 0 else 0)
                         like_date = post.created_at + timedelta(days=days_after_post)
-                        
-                        # Ограничиваем старые лайки годом (относительно TODAY)
                         if (TODAY - like_date).days > 365:
                            like_date = TODAY - timedelta(days=random.randint(30, 365))
-                        
-                        # Гарантируем, что like_date не раньше post.created_at
                         like_date = max(like_date, post.created_at)
-
-
                         PostLike.objects.get_or_create(user=liker, post=post, defaults={'created_at': like_date})
 
                     # Комментарии
                     num_comments = random.randint(5, 15) if trainer == self.popular_trainer_user else random.randint(1, 5)
                     commenters = random.sample(self.regular_users, min(len(self.regular_users), num_comments))
                     for commenter in commenters:
-                        # Аналогично исправляем расчет разницы в днях для comment_date
                         max_days_offset_comment = (TODAY - post.created_at).days
                         if max_days_offset_comment <= 0:
                             max_days_offset_comment = 1
-                        
                         days_after_post_comment = random.randint(0, max_days_offset_comment -1 if max_days_offset_comment > 0 else 0)
                         comment_date = post.created_at + timedelta(days=days_after_post_comment)
-
                         if (TODAY - comment_date).days > 365:
                            comment_date = TODAY - timedelta(days=random.randint(30, 365))
-                        
                         comment_date = max(comment_date, post.created_at)
 
                         Comment.objects.get_or_create(
-                            user=commenter,
+                            author=commenter, # <--- ИСПРАВЛЕНО ЗДЕСЬ (было user=commenter)
                             post=post,
                             defaults={
                                 'content': f"Great comment by {commenter.username} on post {post.id}!",
