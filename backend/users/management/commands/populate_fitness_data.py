@@ -14,10 +14,7 @@ from interactions.models import Follow, PostLike, Comment
 NUM_REGULAR_USERS = 50
 NUM_POSTS_PER_TRAINER = 10
 
-# Используем текущую дату из контекста (11 мая 2025) для создания дат в прошлом
-# В реальном запуске timezone.now() даст текущую дату сервера
-# Для консистентности с вашим запросом, будем отталкиваться от мая 2025
-# В вашем случае, просто timezone.now() будет давать актуальную дату при запуске скрипта
+# Когда я создал данный скрипт
 TODAY = timezone.datetime(2025, 5, 11, tzinfo=timezone.get_current_timezone()) # Установим "сегодня" для консистентности примера
 # TODAY = timezone.now() # Используйте это для реальной текущей даты
 
@@ -119,39 +116,60 @@ class Command(BaseCommand):
             Follow.objects.get_or_create(follower=user, followed=self.moderate_trainer_user, defaults={'created_at': follow_date})
         self.stdout.write(self.style.SUCCESS("Created follows."))
 
-
     def _create_likes_and_comments(self):
-        self.stdout.write("Creating likes and comments...")
-        for trainer_id, posts in self.all_posts_map.items():
-            trainer = User.objects.get(id=trainer_id)
-            for post in posts:
-                # Лайки
-                num_likes = random.randint(20, 50) if trainer == self.popular_trainer_user else random.randint(5, 15)
-                likers = random.sample(self.regular_users, min(len(self.regular_users), num_likes))
-                for liker in likers:
-                    days_ago = random.randint(1, (TODAY - post.created_at.replace(tzinfo=None)).days if (TODAY - post.created_at.replace(tzinfo=None)).days > 0 else 1) # Лайк после поста
-                    like_date = post.created_at + timedelta(days=random.randint(0, (TODAY - post.created_at).days if (TODAY - post.created_at).days > 0 else 0))
-                    if (TODAY - like_date.replace(tzinfo=None)).days > 365 : #Ограничим старые лайки годом
-                        like_date = TODAY - timedelta(days=random.randint(30,365))
+            self.stdout.write("Creating likes and comments...")
+            for trainer_id, posts in self.all_posts_map.items():
+                trainer = User.objects.get(id=trainer_id)
+                for post in posts:
+                    # Лайки
+                    num_likes = random.randint(20, 50) if trainer == self.popular_trainer_user else random.randint(5, 15)
+                    likers = random.sample(self.regular_users, min(len(self.regular_users), num_likes))
+                    for liker in likers:
+                        # Исправляем расчет разницы в днях для like_date
+                        max_days_offset = (TODAY - post.created_at).days
+                        if max_days_offset <= 0: # Если пост создан "сегодня" или в будущем (маловероятно)
+                            max_days_offset = 1 # Лайк может быть в тот же день
 
-                    PostLike.objects.get_or_create(user=liker, post=post, defaults={'created_at': like_date})
+                        # Генерируем дату лайка после создания поста, но до "сегодня"
+                        days_after_post = random.randint(0, max_days_offset -1 if max_days_offset > 0 else 0)
+                        like_date = post.created_at + timedelta(days=days_after_post)
+                        
+                        # Ограничиваем старые лайки годом (относительно TODAY)
+                        if (TODAY - like_date).days > 365:
+                           like_date = TODAY - timedelta(days=random.randint(30, 365))
+                        
+                        # Гарантируем, что like_date не раньше post.created_at
+                        like_date = max(like_date, post.created_at)
 
-                # Комментарии
-                num_comments = random.randint(5, 15) if trainer == self.popular_trainer_user else random.randint(1, 5)
-                commenters = random.sample(self.regular_users, min(len(self.regular_users), num_comments))
-                for commenter in commenters:
-                    comment_date = post.created_at + timedelta(days=random.randint(0, (TODAY - post.created_at).days if (TODAY - post.created_at).days > 0 else 0))
-                    if (TODAY - comment_date.replace(tzinfo=None)).days > 365 :
-                        comment_date = TODAY - timedelta(days=random.randint(30,365))
-                    Comment.objects.get_or_create(
-                        user=commenter, 
-                        post=post, 
-                        defaults={
-                            'content': f"Great comment by {commenter.username} on post {post.id}!",
-                            'created_at': comment_date
-                        }
-                    )
-        self.stdout.write(self.style.SUCCESS("Created likes and comments."))
+
+                        PostLike.objects.get_or_create(user=liker, post=post, defaults={'created_at': like_date})
+
+                    # Комментарии
+                    num_comments = random.randint(5, 15) if trainer == self.popular_trainer_user else random.randint(1, 5)
+                    commenters = random.sample(self.regular_users, min(len(self.regular_users), num_comments))
+                    for commenter in commenters:
+                        # Аналогично исправляем расчет разницы в днях для comment_date
+                        max_days_offset_comment = (TODAY - post.created_at).days
+                        if max_days_offset_comment <= 0:
+                            max_days_offset_comment = 1
+                        
+                        days_after_post_comment = random.randint(0, max_days_offset_comment -1 if max_days_offset_comment > 0 else 0)
+                        comment_date = post.created_at + timedelta(days=days_after_post_comment)
+
+                        if (TODAY - comment_date).days > 365:
+                           comment_date = TODAY - timedelta(days=random.randint(30, 365))
+                        
+                        comment_date = max(comment_date, post.created_at)
+
+                        Comment.objects.get_or_create(
+                            user=commenter,
+                            post=post,
+                            defaults={
+                                'content': f"Great comment by {commenter.username} on post {post.id}!",
+                                'created_at': comment_date
+                            }
+                        )
+            self.stdout.write(self.style.SUCCESS("Created likes and comments."))
 
     @transaction.atomic # Выполнять все в одной транзакции
     def handle(self, *args, **options):
