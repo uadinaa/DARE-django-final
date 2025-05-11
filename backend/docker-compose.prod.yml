@@ -12,6 +12,15 @@ services:
     ports:
       - "5432:5432"
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis_broker_prod
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_prod:/data    
+
   backend:
     container_name: django_backend_prod
     build: .
@@ -33,11 +42,71 @@ services:
       - AWS_S3_REGION_NAME=${AWS_S3_REGION_NAME}
       - AWS_DEFAULT_ACL=${AWS_DEFAULT_ACL}
       - AWS_LOCATION=${AWS_LOCATION}
+      - CELERY_BROKER_URL=redis://redis:6379/0 
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     depends_on:
       - db
+      - redis
     command: >
       sh -c "python manage.py migrate --noinput &&
              gunicorn core.wsgi:application --bind 0.0.0.0:8000"
 
+  celery_worker:
+    build: .
+    container_name: celery_worker_prod
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    command: celery -A core worker -l INFO
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
+      - AWS_S3_REGION_NAME=${AWS_S3_REGION_NAME}
+      - AWS_DEFAULT_ACL=${AWS_DEFAULT_ACL}
+      - AWS_LOCATION=${AWS_LOCATION}
+      - CELERY_BROKER_URL=redis://redis:6379/0 
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+      - db
+
+  celery_beat:
+    build: .
+    container_name: celery_beat_prod
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    command: celery -A core beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
+      - AWS_S3_REGION_NAME=${AWS_S3_REGION_NAME}
+      - AWS_DEFAULT_ACL=${AWS_DEFAULT_ACL}
+      - AWS_LOCATION=${AWS_LOCATION}
+      - CELERY_BROKER_URL=redis://redis:6379/0 
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+      - db
+
 volumes:
    postgres_data_prod:
+   redis_data_prod:

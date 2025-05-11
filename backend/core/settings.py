@@ -23,6 +23,9 @@ INSTALLED_APPS = [
     "corsheaders",
     "storages",
     "imagekit",
+    'django_celery_beat', 
+    
+    
     "users.apps.UsersConfig",
     "posts.apps.PostsConfig",
     "interactions.apps.InteractionsConfig",
@@ -171,5 +174,24 @@ STORAGES = {
         #     "location": "static", # Обычно отдельная папка для статики
         #     "default_acl": "public-read", # Статика должна быть публичной
         # },
+    },
+}
+
+
+CELERY_BROKER_URL = 'redis://redis:6379/0'  # Указывает на сервис 'redis' из docker-compose
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0' # Место хранения результатов задач
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    'calculate-trainer-levels-every-minute': {
+        'task': 'calculate_all_trainer_levels', # Имя задачи из users.tasks.py (атрибут name)
+        'schedule': crontab(),  # Запускать каждую минуту
+        # 'args': (16, 16), # Пример аргументов для задачи, если нужны
     },
 }
