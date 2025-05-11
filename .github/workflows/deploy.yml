@@ -1,95 +1,94 @@
-# .github/workflows/deploy.yml
-name: Deploy Backend to EC2
+# name: Deploy Backend to EC2
 
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'backend/**'
-  workflow_dispatch:
+# on:
+#   push:
+#     branches:
+#       - main
+#     paths:
+#       - 'backend/**'
+#   workflow_dispatch:
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
 
-      - name: Set up SSH Key File and Known Hosts
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
-          EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com
-        run: |
-          mkdir -p ~/.ssh/
-          chmod 700 ~/.ssh/
-          KEY_FILE_PATH=~/.ssh/id_rsa_deploy
-          printf "%s\n" "${SSH_PRIVATE_KEY}" > ${KEY_FILE_PATH}
-          chmod 600 ${KEY_FILE_PATH}
-          if ! ssh-keygen -l -f ${KEY_FILE_PATH} > /dev/null 2>&1; then
-            echo "❌ ERROR: Invalid SSH key format detected in secret." >&2
-            exit 1
-          fi
-          ssh-keyscan -H "${EC2_HOST}" >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
+#       - name: Set up SSH Key File and Known Hosts
+#         env:
+#           SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+#           EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com
+#         run: |
+#           mkdir -p ~/.ssh/
+#           chmod 700 ~/.ssh/
+#           KEY_FILE_PATH=~/.ssh/id_rsa_deploy
+#           printf "%s\n" "${SSH_PRIVATE_KEY}" > ${KEY_FILE_PATH}
+#           chmod 600 ${KEY_FILE_PATH}
+#           if ! ssh-keygen -l -f ${KEY_FILE_PATH} > /dev/null 2>&1; then
+#             echo "❌ ERROR: Invalid SSH key format detected in secret." >&2
+#             exit 1
+#           fi
+#           ssh-keyscan -H "${EC2_HOST}" >> ~/.ssh/known_hosts
+#           chmod 644 ~/.ssh/known_hosts
 
-      - name: Deploy to EC2
-        env:
-          EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com
-          EC2_USER: ubuntu
-          DEPLOY_DIR: /home/ubuntu/app/backend
-          # --- Django & DB Secrets/Config ---
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: fitness_db
-          DB_USER: postgres
-          # --- AWS S3 Secrets/Config ---
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_STORAGE_BUCKET_NAME: ${{ secrets.AWS_STORAGE_BUCKET_NAME }}
-          AWS_S3_REGION_NAME: ${{ secrets.AWS_S3_REGION_NAME }}
-          AWS_DEFAULT_ACL: 'private'
-          AWS_LOCATION: 'media'
-        run: |
-          KEY_FILE_PATH=~/.ssh/id_rsa_deploy
-          ssh -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} "${EC2_USER}@${EC2_HOST}" "mkdir -p ${DEPLOY_DIR}"
-          scp -r -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} ./backend/* "${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/"
+#       - name: Deploy to EC2
+#         env:
+#           EC2_HOST: ec2-13-53-50-251.eu-north-1.compute.amazonaws.com
+#           EC2_USER: ubuntu
+#           DEPLOY_DIR: /home/ubuntu/app/backend
+#           # --- Django & DB Secrets/Config ---
+#           SECRET_KEY: ${{ secrets.SECRET_KEY }}
+#           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+#           DB_NAME: fitness_db
+#           DB_USER: postgres
+#           # --- AWS S3 Secrets/Config ---
+#           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           AWS_STORAGE_BUCKET_NAME: ${{ secrets.AWS_STORAGE_BUCKET_NAME }}
+#           AWS_S3_REGION_NAME: ${{ secrets.AWS_S3_REGION_NAME }}
+#           AWS_DEFAULT_ACL: 'private'
+#           AWS_LOCATION: 'media'
+#         run: |
+#           KEY_FILE_PATH=~/.ssh/id_rsa_deploy
+#           ssh -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} "${EC2_USER}@${EC2_HOST}" "mkdir -p ${DEPLOY_DIR}"
+#           scp -r -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} ./backend/* "${EC2_USER}@${EC2_HOST}:${DEPLOY_DIR}/"
 
-          ssh -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} "${EC2_USER}@${EC2_HOST}" << EOF
-            cd ${DEPLOY_DIR}
+#           ssh -o StrictHostKeyChecking=no -i ${KEY_FILE_PATH} "${EC2_USER}@${EC2_HOST}" << EOF
+#             cd ${DEPLOY_DIR}
 
-            # Export variables for docker-compose
-            export SECRET_KEY='${{ env.SECRET_KEY }}'
-            export DEBUG='False'
-            export DB_PASSWORD='${{ env.DB_PASSWORD }}'
-            export DB_NAME='${{ env.DB_NAME }}'
-            export DB_USER='${{ env.DB_USER }}'
-            export DB_HOST=db
-            export AWS_ACCESS_KEY_ID='${{ env.AWS_ACCESS_KEY_ID }}'
-            export AWS_SECRET_ACCESS_KEY='${{ env.AWS_SECRET_ACCESS_KEY }}'
-            export AWS_STORAGE_BUCKET_NAME='${{ env.AWS_STORAGE_BUCKET_NAME }}'
-            export AWS_S3_REGION_NAME='${{ env.AWS_S3_REGION_NAME }}'
-            export AWS_DEFAULT_ACL='${{ env.AWS_DEFAULT_ACL }}'
-            export AWS_LOCATION='${{ env.AWS_LOCATION }}'
+#             # Export variables for docker-compose
+#             export SECRET_KEY='${{ env.SECRET_KEY }}'
+#             export DEBUG='False'
+#             export DB_PASSWORD='${{ env.DB_PASSWORD }}'
+#             export DB_NAME='${{ env.DB_NAME }}'
+#             export DB_USER='${{ env.DB_USER }}'
+#             export DB_HOST=db
+#             export AWS_ACCESS_KEY_ID='${{ env.AWS_ACCESS_KEY_ID }}'
+#             export AWS_SECRET_ACCESS_KEY='${{ env.AWS_SECRET_ACCESS_KEY }}'
+#             export AWS_STORAGE_BUCKET_NAME='${{ env.AWS_STORAGE_BUCKET_NAME }}'
+#             export AWS_S3_REGION_NAME='${{ env.AWS_S3_REGION_NAME }}'
+#             export AWS_DEFAULT_ACL='${{ env.AWS_DEFAULT_ACL }}'
+#             export AWS_LOCATION='${{ env.AWS_LOCATION }}'
 
-            COMPOSE_FILE="docker-compose.prod.yml"
-            if [ ! -f "\${COMPOSE_FILE}" ]; then
-              echo "ERROR: \${COMPOSE_FILE} not found in ${DEPLOY_DIR}!"
-              if [ -f "docker-compose.yml" ]; then
-                COMPOSE_FILE="docker-compose.yml"
-                echo "WARNING: Using docker-compose.yml as fallback."
-              else
-                exit 1
-              fi
-            fi
-            echo "Using \${COMPOSE_FILE}"
+#             COMPOSE_FILE="docker-compose.prod.yml"
+#             if [ ! -f "\${COMPOSE_FILE}" ]; then
+#               echo "ERROR: \${COMPOSE_FILE} not found in ${DEPLOY_DIR}!"
+#               if [ -f "docker-compose.yml" ]; then
+#                 COMPOSE_FILE="docker-compose.yml"
+#                 echo "WARNING: Using docker-compose.yml as fallback."
+#               else
+#                 exit 1
+#               fi
+#             fi
+#             echo "Using \${COMPOSE_FILE}"
 
-            docker-compose -f \${COMPOSE_FILE} down --remove-orphans || echo "Docker down failed or no containers running."
-            docker-compose -f \${COMPOSE_FILE} pull db
-            docker-compose -f \${COMPOSE_FILE} build backend
-            docker-compose -f \${COMPOSE_FILE} up -d
-            docker image prune -f || echo "Image prune failed."
-            echo "Deployment script finished on EC2."
-          EOF
-          echo "Deployment process complete."
+#             docker-compose -f \${COMPOSE_FILE} down --remove-orphans || echo "Docker down failed or no containers running."
+#             docker-compose -f \${COMPOSE_FILE} pull db
+#             docker-compose -f \${COMPOSE_FILE} build backend
+#             docker-compose -f \${COMPOSE_FILE} up -d
+#             docker image prune -f || echo "Image prune failed."
+#             echo "Deployment script finished on EC2."
+#           EOF
+#           echo "Deployment process complete."
