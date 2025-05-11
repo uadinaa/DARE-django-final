@@ -3,6 +3,7 @@ from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
+from django.http import Http404
 
 from core.permissions import IsAdminUser, IsProfileOwnerOrAdmin
 
@@ -20,22 +21,41 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     pass
 
 
-class UserProfileUpdateView(generics.RetrieveUpdateAPIView):
+class UserProfileUpdateView(generics.UpdateAPIView): # <-- Базовый класс изменен
+    """
+    Обновляет (PUT/PATCH) профиль ТЕКУЩЕГО аутентифицированного пользователя.
+    Не обрабатывает GET запросы.
+    """
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     permission_classes = [
         IsAuthenticated,
         IsProfileOwnerOrAdmin,
-    ]  # Только владелец или админ
+    ]
+
+    def get_object(self): # Метод get_object ОСТАЕТСЯ
+        try:
+            return self.request.user.profile
+        except Profile.DoesNotExist:
+            raise Http404("Профиль для этого пользователя не найден.")
+        
+class CurrentUserDetailView(generics.RetrieveAPIView): # Или MeView, как было у коллеги
+    """
+    Возвращает полную информацию (User + Profile) для текущего аутентифицированного пользователя.
+    """
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        return self.request.user.profile
+        return self.request.user
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all().select_related("profile")
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
+    
+
     
 class TopTrainersListView(generics.ListAPIView):
     """

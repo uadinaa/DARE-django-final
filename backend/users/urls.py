@@ -7,15 +7,17 @@ from .views import (
     RegisterView,
     UserProfileUpdateView,
     UserViewSet,
-    TopTrainersListView
+    TopTrainersListView,
+    CurrentUserDetailView,
 )
 
 router = DefaultRouter()
-router.register(r"", UserViewSet, basename="user")
+router.register(r"users", UserViewSet, basename="user")
 
 urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
-    path("profile/", UserProfileUpdateView.as_view(), name="user-profile-update"),
+    path("users/me/", CurrentUserDetailView.as_view(), name="current-user-detail"), # <-- НОВЫЙ URL
+    path("users/me/profile/", UserProfileUpdateView.as_view(), name="current-user-profile-update"),
     path("", include(router.urls)),
     path('trainers/top/', TopTrainersListView.as_view(), name='top-trainers-list'),
     # Admin actions
