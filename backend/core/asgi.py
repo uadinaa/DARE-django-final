@@ -1,20 +1,23 @@
 import os
-
+import django
+from django.core.asgi import get_asgi_application
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
-from django.core.asgi import get_asgi_application
-
-import llm.routing
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
 
+# Инициализируем Django перед импортом middleware
+django.setup()
 
-django_asgi_app = get_asgi_application()
-
+# Импортируем после django.setup()
+from llm.middleware import JWTAuthMiddleware
+import llm.routing
 
 application = ProtocolTypeRouter(
     {
-        "http": django_asgi_app,
-        "websocket": AuthMiddlewareStack(URLRouter(llm.routing.websocket_urlpatterns)),
+        "http": get_asgi_application(),
+        "websocket": JWTAuthMiddleware(
+            AuthMiddlewareStack(URLRouter(llm.routing.websocket_urlpatterns))
+        ),
     }
 )

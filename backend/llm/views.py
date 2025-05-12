@@ -12,22 +12,20 @@ from .serializers import (
     CreateAssistantSerializer,
     UpdateAssistantResponseSerializer,
 )
+from core import settings
 
 logger = logging.getLogger("platform")
 
 
 class CreateAssistantView(mixins.CreateModelMixin, viewsets.GenericViewSet):
-
     queryset = ConversationHistory.objects.all()
-
     serializer_class = CreateAssistantSerializer
-
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     def create(self, request):
         logger.info("Received request to CreateAssistantView")
         try:
-            # Валидация данных через сериализатор
             serializer = self.serializer_class(data=request.data)
             if not serializer.is_valid():
                 logger.warning(f"Validation failed: {serializer.errors}")
@@ -38,7 +36,7 @@ class CreateAssistantView(mixins.CreateModelMixin, viewsets.GenericViewSet):
             logger.debug(f"User message: {message}")
 
             chatgpt_agent = OpenAIAssistantAgent.from_existing(
-                assistant_id="...",
+                assistant_id=settings.ASSISTANT_ID,
                 verbose=True,
             )
             response = chatgpt_agent.chat(message)
@@ -48,6 +46,7 @@ class CreateAssistantView(mixins.CreateModelMixin, viewsets.GenericViewSet):
                 user_message=message,
                 assistant_response=response.response,
                 thread_id=chatgpt_agent.thread_id,
+                user=request.user
             )
             return Response(
                 {"message": response.response, "thread_id": chatgpt_agent.thread_id},
@@ -62,12 +61,10 @@ class CreateAssistantView(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
 
 class UpdateAssistantResponseView(mixins.CreateModelMixin, viewsets.GenericViewSet):
-
     queryset = ConversationHistory.objects.all()
-
     serializer_class = UpdateAssistantResponseSerializer
-
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     def create(self, request):
         logger.info("Received request to UpdateAssistantResponseView")
@@ -84,7 +81,7 @@ class UpdateAssistantResponseView(mixins.CreateModelMixin, viewsets.GenericViewS
             logger.debug(f"User message: {message}, Thread ID: {thread_id}")
 
             chatgpt_agent = OpenAIAssistantAgent.from_existing(
-                assistant_id="...",
+                assistant_id=settings.ASSISTANT_ID,
                 thread_id=thread_id,
                 verbose=True,
             )
@@ -95,6 +92,7 @@ class UpdateAssistantResponseView(mixins.CreateModelMixin, viewsets.GenericViewS
                 user_message=message,
                 assistant_response=response.response,
                 thread_id=thread_id,
+                user=request.user
             )
             return Response({"response": response.response}, status=status.HTTP_200_OK)
 
@@ -105,15 +103,23 @@ class UpdateAssistantResponseView(mixins.CreateModelMixin, viewsets.GenericViewS
             )
 
 
-class ConversationHistoryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-
-    permission_classes = [permissions.AllowAny]
-    queryset = ConversationHistory.objects.all()
+class ConversationHistoryViewSet(viewsets.ModelViewSet):
     serializer_class = ConversationHistorySerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        # Возвращаем историю только для текущего пользователя
+        return ConversationHistory.objects.filter(user=self.request.user)
 
-        thread_id = self.kwargs.get("thread_id")
-        if thread_id:
-            return self.queryset.filter(thread_id=thread_id).order_by("timestamp")
-        return self.queryset
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def by_thread(self, request):
+        thread_id = request.query_params.get('thread_id')
+        if not thread_id:
+            return Response({"error": "thread_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        conversations = self.get_queryset().filter(thread_id=thread_id)
+        serializer = self.get_serializer(conversations, many=True)
+        return Response(serializer.data)

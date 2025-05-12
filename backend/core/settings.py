@@ -198,3 +198,5 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(minute=0, hour=1),  # Каждый день в 1:00 ночи
     },
 }
+
+ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
