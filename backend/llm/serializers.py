@@ -6,7 +6,8 @@ from .models import ConversationHistory
 class ConversationHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ConversationHistory
-        fields = ["timestamp", "user_message", "assistant_response"]
+        fields = ["id", "timestamp", "user_message", "assistant_response", "thread_id", "user"]
+        read_only_fields = ["timestamp", "user"]
 
 
 class CreateAssistantSerializer(serializers.Serializer):

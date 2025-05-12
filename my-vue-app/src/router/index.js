@@ -77,6 +77,12 @@ const routes = [
     component: FollowersListPage,
     props: true,
     meta: { layout: 'MainLayout', requiresAuth: true }
+  },
+  {
+    path: '/chat',
+    name: 'chat',
+    component: () => import('../views/ChatBot.vue'),
+    meta: { layout: 'MainLayout', requiresAuth: true }
   }
 ];
 

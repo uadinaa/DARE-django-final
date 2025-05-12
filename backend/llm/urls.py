@@ -16,7 +16,7 @@ from .views import (
 
 class WSCreateDocView(APIView):
     @swagger_auto_schema(
-        operation_description="Документация WS: ws://…/ws/assistant/create/\n"
+        operation_description="Документация WS: ws://…/ws/assistant/create/?token=YOUR_JWT_TOKEN\n"
         "Принимает payload: { message: string }\n"
         "Возвращает: { message: string, thread_id: string }",
         request_body=CreateAssistantSerializer,
@@ -30,7 +30,7 @@ class WSCreateDocView(APIView):
 
 class WSUpdateDocView(APIView):
     @swagger_auto_schema(
-        operation_description="Документация WS: ws://…/ws/assistant/update/\n"
+        operation_description="Документация WS: ws://…/ws/assistant/update/?token=YOUR_JWT_TOKEN\n"
         "Принимает payload: { message: string, thread_id: string }\n"
         "Возвращает: { response: string }",
         request_body=UpdateAssistantResponseSerializer,
@@ -43,11 +43,7 @@ class WSUpdateDocView(APIView):
 
 
 router = DefaultRouter()
-router.register(
-    r"conversation-history/(?P<thread_id>\w+)",
-    ConversationHistoryViewSet,
-    basename="conversation-history",
-)
+router.register(r'conversations', ConversationHistoryViewSet, basename='conversation')
 
 router.register(r"assistant/create", CreateAssistantView, basename="create_assistant")
 router.register(

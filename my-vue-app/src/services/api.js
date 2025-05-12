@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'http://139.59.64.140:8000/api', // Ваш базовый URL API
+  // baseURL: 'http://139.59.64.140:8000/api', // Ваш базовый URL API
+  baseURL: 'http://localhost:8000/api', // Ваш базовый URL API
 });
 
 // Интерцептор запросов: добавляет токен авторизации к каждому запросу, если он есть

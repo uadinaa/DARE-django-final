@@ -1,0 +1,1 @@
+<router-link to="/chat" class="nav-link">Чат-бот</router-link> 
