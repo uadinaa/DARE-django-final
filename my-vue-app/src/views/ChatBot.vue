@@ -5,10 +5,10 @@
         <h5 class="mb-0">Чат-бот</h5>
         <span class="badge" :class="connectionStatusClass">{{ connectionStatus }}</span>
       </div>
-      
+
       <div class="card-body">
         <div class="chat-messages" ref="messagesContainer">
-          <div v-for="(message, index) in messages" :key="index" 
+          <div v-for="(message, index) in messages" :key="index"
                :class="['message', message.type === 'user' ? 'message-user' : 'message-bot']">
             {{ message.text }}
           </div>
@@ -17,15 +17,15 @@
 
       <div class="card-footer">
         <form @submit.prevent="sendMessage" class="d-flex gap-2">
-          <input 
-            type="text" 
-            v-model="newMessage" 
+          <input
+            type="text"
+            v-model="newMessage"
             class="form-control form-control-dark"
             placeholder="Введите сообщение..."
             :disabled="!isConnected"
           >
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             class="btn btn-success"
             :disabled="!isConnected || !newMessage.trim()"
           >
@@ -50,8 +50,8 @@ const threadId = ref(null);
 const messagesContainer = ref(null);
 
 const connectWebSocket = () => {
-  ws.value = new WebSocket('ws://127.0.0.1:8000/ws/assistant/create/');
-  
+  ws.value = new WebSocket('ws://139.59.64.140:8000/ws/assistant/create/');
+
   ws.value.onopen = () => {
     isConnected.value = true;
     connectionStatus.value = 'Подключено';
@@ -70,20 +70,20 @@ const connectWebSocket = () => {
       type: 'bot',
       text: data.message
     });
-    
+
     if (data.thread_id) {
       threadId.value = data.thread_id;
       ws.value.close();
       connectUpdateWebSocket();
     }
-    
+
     scrollToBottom();
   };
 };
 
 const connectUpdateWebSocket = () => {
-  ws.value = new WebSocket('ws://127.0.0.1:8000/ws/assistant/update/');
-  
+  ws.value = new WebSocket('ws://139.59.64.140:8000/ws/assistant/update/');
+
   ws.value.onopen = () => {
     isConnected.value = true;
     connectionStatus.value = 'Подключено';
@@ -176,4 +176,4 @@ onUnmounted(() => {
   font-size: 0.8rem;
   padding: 0.5rem;
 }
-</style> 
+</style>
