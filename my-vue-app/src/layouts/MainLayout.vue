@@ -61,14 +61,13 @@ const contentAreaClass = computed(() => {
 .main-content-area {
   flex-grow: 1; 
   margin-left: var(--sidebar-width); 
-  /* background-color: lightcoral; /* Для отладки */
-  display: flex; /* Чтобы main-content-inner мог центрироваться, если нужно */
-  justify-content: center; /* Центрируем main-content-inner */
-  overflow-y: auto; /* Если контент высокий, скролл будет здесь */
-  padding-top: var(--default-padding); /* Добавим верхний отступ здесь */
-  padding-bottom: var(--default-padding); /* И нижний */
+  display: flex; 
+  justify-content: center; 
+  /* overflow-y: auto; /* Можно временно закомментировать для теста */
+  /* overflow-x: hidden; /* ЭТО МОЖЕТ БЫТЬ ПРИЧИНОЙ, попробуйте закомментировать */
+  padding-top: var(--default-padding); 
+  padding-bottom: var(--default-padding);
 }
-
 /* Динамический отступ для .main-content-area, когда правый сайдбар видим */
 .main-content-area.with-right-sidebar {
   margin-right: 300px; /* Ширина правого сайдбара */

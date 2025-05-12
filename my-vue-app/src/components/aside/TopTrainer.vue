@@ -20,7 +20,7 @@
           />
           <div class="trainer-info">
             <span class="trainer-username">{{ trainer.username }}</span>
-            <span class="trainer-level d-block text-muted small">Уровень: {{ trainer.profile.level_score }}</span>
+            <span class="trainer-level d-block small">Уровень: {{ trainer.profile.level_score }}</span>
           </div>
         </router-link>
       </li>
@@ -101,6 +101,7 @@ onMounted(() => {
 }
 .trainer-level {
   font-size: 0.85em;
+  color: var(--vt-c-white-soft);
 }
 .alert-danger_custom {
   color: #f8d7da;

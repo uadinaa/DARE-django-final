@@ -91,3 +91,12 @@ a {
   color: var(--color-text-muted-dark-theme) !important;
   border-top: 1px solid var(--color-border-dark-theme);
 }
+
+.form-control-dark:disabled,
+.form-control-dark[readonly] {
+  background-color: #495057;
+  color: var(--vt-c-text-dark-2);
+  opacity: 0.7;
+  border-color: var(--color-border-dark-theme);
+  cursor: not-allowed;
+}

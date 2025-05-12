@@ -10,7 +10,7 @@
         <img :src="user.profile.avatar_url || defaultAvatar" alt="Аватар" class="profile-avatar me-4"/>
         <div class="profile-header-info">
           <h2 class="text-light mb-1">{{ user.username }}</h2>
-          <p class="text-muted mb-2 small">Уровень: {{ user.profile.level_score || 0 }}</p>
+          <p class="trainer-level-display mb-2 small">Уровень: {{ user.profile.level_score || 0 }}</p>
           <router-link :to="{ name: 'profile-edit' }" class="btn btn-outline-light btn-sm">
             Редактировать профиль
           </router-link>
@@ -105,6 +105,10 @@ onMounted(() => {
 }
 .profile-bio p {
   margin-bottom: 0; /* Убрать нижний отступ у параграфа с био, если нужно */
+}
+.trainer-level-display {
+  color: var(--vt-c-white-soft);
+  font-size: 0.9em;
 }
 .stat-link { color: var(--vt-c-text-dark-1); text-decoration: none; display: inline-block; }
 .stat-link:hover .stat-label, .stat-link:hover .stat-number { color: var(--color-accent); }

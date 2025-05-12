@@ -25,19 +25,14 @@
   const router = useRouter();
   
   const performLogout = async () => {
-    // TODO: Реализовать более полную логику логаута с вызовом API и сбросом состояния в store (Pinia/Vuex)
-    // const refreshToken = localStorage.getItem('refreshToken');
-    // if (refreshToken) {
-    //   try {
-    //     await apiClient.post('/users/logout/', { refresh: refreshToken });
-    //   } catch (error) {
-    //     console.error("Server-side logout error:", error);
-    //   }
-    // }
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    router.push({ name: 'login' });
-  };
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('currentUserId');
+  localStorage.removeItem('currentUserRole');
+  localStorage.removeItem('currentUserIsStaff');
+  
+  router.push({ name: 'login' });
+};
   </script>
   
   <style scoped>

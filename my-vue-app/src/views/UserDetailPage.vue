@@ -13,7 +13,7 @@
         <img :src="userData.profile.avatar_url || defaultAvatar" alt="Аватар" class="profile-avatar me-4"/>
         <div class="profile-header-info">
           <h2 class="text-light mb-1">{{ userData.username }}</h2>
-          <p class="text-muted mb-2 small">Уровень: {{ userData.profile.level_score || 0 }}</p>
+          <p class="trainer-level-display mb-2 small">Уровень: {{ userData.profile.level_score || 0 }}</p>
           
           <button 
             v-if="canShowFollowButton" 
@@ -227,6 +227,10 @@ watch(() => props.userId, (newUserId) => {
 }
 .snackbar.bg-success { 
   background-color: var(--color-accent);
+}
+.trainer-level-display {
+  color: var(--vt-c-white-soft);
+  font-size: 0.9em;
 }
 .snackbar.bg-danger {
   background-color: #dc3545;
