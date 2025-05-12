@@ -50,7 +50,7 @@ const threadId = ref(null);
 const messagesContainer = ref(null);
 
 const connectWebSocket = () => {
-  ws.value = new WebSocket('ws://0.0.0.0:8000/ws/assistant/create/');
+  ws.value = new WebSocket('ws://139.59.64.140:8000/ws/assistant/create/');
 
   ws.value.onopen = () => {
     isConnected.value = true;
@@ -82,7 +82,7 @@ const connectWebSocket = () => {
 };
 
 const connectUpdateWebSocket = () => {
-  ws.value = new WebSocket('ws://0.0.0.0:8000/ws/assistant/update/');
+  ws.value = new WebSocket('ws://139.59.64.140:8000/ws/assistant/update/');
 
   ws.value.onopen = () => {
     isConnected.value = true;
