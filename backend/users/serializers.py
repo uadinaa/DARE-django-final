@@ -60,8 +60,6 @@ class ProfileSerializer(serializers.ModelSerializer):
             return obj.user.following.count()
         return 0
 
-
-# UserSerializer использует ProfileSerializer выше
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(read_only=True)
 

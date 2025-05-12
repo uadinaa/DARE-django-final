@@ -20,3 +20,4 @@ channels
 celery
 redis
 django-celery-beat
+django-filter

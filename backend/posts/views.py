@@ -1,12 +1,12 @@
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
 
 from core.permissions import IsAdminUser, IsAuthorOrReadOnly, IsTrainer
 
 from .models import Post
 from .serializers import PostSerializer
-
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = (
@@ -15,7 +15,9 @@ class PostViewSet(viewsets.ModelViewSet):
         .all()
     )
     serializer_class = PostSerializer
-    filter_backends = [filters.OrderingFilter, filters.SearchFilter]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    filterset_fields = ['author', 'author__username']
+
     ordering_fields = ["created_at", "likes_count"]
     search_fields = ["content", "author__username"]
     ordering = ["-created_at"]

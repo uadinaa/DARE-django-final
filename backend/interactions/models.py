@@ -59,6 +59,3 @@ class PostLike(models.Model):
 
     def __str__(self):
         return f"{self.user.username} лайкнул пост {self.post_id}"
-
-
-# TODO: При необходимости добавить модель CommentLike по аналогии с PostLike

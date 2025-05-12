@@ -24,7 +24,7 @@ INSTALLED_APPS = [
     "storages",
     "imagekit",
     'django_celery_beat', 
-    
+    'django-filters'
     
     "users.apps.UsersConfig",
     "posts.apps.PostsConfig",

@@ -5,19 +5,13 @@ import { createRouter, createWebHistory } from 'vue-router';
 import HomePage from '@/views/HomePage.vue';
 import RegisterPage from '@/views/RegisterPage.vue';
 import LoginPage from '@/views/LoginPage.vue';
-import ProfilePage from '@/views/ProfilePage.vue'; // Для своего профиля
+import ProfilePage from '@/views/ProfilePage.vue';
+import ProfileEditPage from '@/views/ProfileEditPage.vue';
+import FollowingListPage from '@/views/FollowingListPage.vue';
+import FollowersListPage from '@/views/FollowersListPage.vue';
 import SettingsPage from '@/views/SettingsPage.vue';
 import PostDetailPage from '@/views/PostDetailPage.vue';
-import UserDetailPage from '@/views/UserDetailPage.vue'; // <-- НОВАЯ СТРАНИЦА для профиля другого пользователя
-
-// Убираем дублирующийся импорт AllPostsFeed, если HomePage - это он
-// import AllPostsFeed from '@/views/AllPostsFeed.vue';
-
-// Убираем импорты компонентов, если они не используются как страницы напрямую
-// import UserPage from '../components/Profile/UserProfile.vue';
-// import TrainerPage from '@/components/Profile/TrainerPage.vue';
-// import AdminPage from '@/components/Profile/AdminPage.vue'
-
+import UserDetailPage from '@/views/UserDetailPage.vue';
 
 const routes = [
   {
@@ -45,6 +39,12 @@ const routes = [
     meta: { layout: 'MainLayout', requiresAuth: true }
   },
   {
+    path: '/profile/edit',
+    name: 'profile-edit',
+    component: ProfileEditPage,
+    meta: { layout: 'MainLayout', requiresAuth: true }
+  },
+  {
     path: '/settings',
     name: 'settings',
     component: SettingsPage,
@@ -57,15 +57,27 @@ const routes = [
     props: true,
     meta: { layout: 'MainLayout', requiresAuth: true }
   },
-  // --- НОВЫЙ МАРШРУТ ДЛЯ ПРОСМОТРА ПРОФИЛЯ ПОЛЬЗОВАТЕЛЯ ПО ID ---
   {
     path: '/users/:userId', // :userId - это параметр для ID пользователя
-    name: 'user-detail',   // Имя маршрута, используется в TopTrainer.vue
+    name: 'user-detail',
     component: UserDetailPage,
-    props: true, // Позволяет передавать userId как props в компонент UserDetailPage
+    props: true,
+    meta: { layout: 'MainLayout', requiresAuth: true }
+  },
+  {
+    path: '/users/:userId/following',
+    name: 'user-following',
+    component: FollowingListPage,
+    props: true,
+    meta: { layout: 'MainLayout', requiresAuth: true }
+  },
+  {
+    path: '/users/:userId/followers',
+    name: 'user-followers',
+    component: FollowersListPage,
+    props: true,
     meta: { layout: 'MainLayout', requiresAuth: true }
   }
-  // -----------------------------------------------------------
 ];
 
 const router = createRouter({
