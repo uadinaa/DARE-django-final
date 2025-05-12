@@ -1,7 +1,5 @@
-// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router';
 
-// Views (страницы)
 import HomePage from '@/views/HomePage.vue';
 import RegisterPage from '@/views/RegisterPage.vue';
 import LoginPage from '@/views/LoginPage.vue';
@@ -33,8 +31,8 @@ const routes = [
     meta: { layout: 'AuthLayout' }
   },
   {
-    path: '/profile', // Маршрут для СВОЕГО профиля
-    name: 'profile', // Это имя будет использоваться в AppSidebar.vue
+    path: '/profile',
+    name: 'profile',
     component: ProfilePage,
     meta: { layout: 'MainLayout', requiresAuth: true }
   },

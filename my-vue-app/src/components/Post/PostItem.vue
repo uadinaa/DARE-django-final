@@ -50,7 +50,7 @@
       </p>
     </div>
 
-    <img v-if="post.image && !isDetailedView" :src="post.image" class="post-image w-100" alt="Изображение поста">
+    <img v-if="post.image" :src="post.image" class="post-image w-100" alt="Изображение поста">
 
     <div class="post-metrics d-flex justify-content-end align-items-center mt-2">
       <button @click.stop="toggleLike" class="btn btn-sm border-0 p-0 me-3 like-button" :class="{'liked': isLikedByCurrentUser}">
