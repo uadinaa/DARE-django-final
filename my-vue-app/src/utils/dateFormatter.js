@@ -21,3 +21,28 @@ export function formatPostDate(dateString) {
       return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
     }
   }
+
+  export function formatPostDetailDate(dateString) {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return "Некорр. дата";
+      }
+      // "ЧЧ:ММ, ДД МММ. ГГГГ"
+      const options = {
+        hour: '2-digit',
+        minute: '2-digit',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      };
+      let formatted = new Intl.DateTimeFormat('ru-RU', options).format(date);
+      // Intl.DateTimeFormat может добавлять " г." после года, уберем если есть
+      formatted = formatted.replace(/\s*г\.$/, '');
+      return formatted;
+    } catch (e) {
+      console.error("Error formatting detail date:", e);
+      return "Ошибка даты";
+    }
+  }

@@ -9,6 +9,7 @@ class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     likes_count = serializers.SerializerMethodField(read_only=True)
     is_liked_by_user = serializers.SerializerMethodField(read_only=True)
+    comments_count = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Post
@@ -21,6 +22,7 @@ class PostSerializer(serializers.ModelSerializer):
             "updated_at",
             "likes_count",
             "is_liked_by_user",
+            "comments_count",
         ]
         read_only_fields = [
             "id",
@@ -29,6 +31,7 @@ class PostSerializer(serializers.ModelSerializer):
             "updated_at",
             "likes_count",
             "is_liked_by_user",
+            "comments_count",
         ]
 
     def get_likes_count(self, obj):
@@ -42,3 +45,10 @@ class PostSerializer(serializers.ModelSerializer):
             return False
         # Проверяем, существует ли лайк от этого пользователя для этого поста
         return obj.likes.filter(user=user).exists()
+    
+    def get_comments_count(self, obj):
+        # obj - это экземпляр Post
+        # Предполагаем, что у модели Post есть related_name='comments' от модели Comment
+        if hasattr(obj, 'comments'):
+            return obj.comments.count()
+        return 0
