@@ -38,21 +38,24 @@ jobs:
       - name: Deploy to Droplet
         env:
           DROPLET_HOST: 139.59.64.140
-          DROPLET_USER: root # или ваш пользователь
+          DROPLET_USER: root
           BACKEND_DEPLOY_DIR: /root/app/backend
           FRONTEND_DEPLOY_DIR: /root/app/my-vue-app
-
-          # --- Секреты и конфигурация ---
+          # --- Django & DB Secrets/Config ---
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: fitness_db
           DB_USER: postgres
+          # --- AWS S3 Secrets/Config ---
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_STORAGE_BUCKET_NAME: ${{ secrets.AWS_STORAGE_BUCKET_NAME }}
           AWS_S3_REGION_NAME: ${{ secrets.AWS_S3_REGION_NAME }}
           AWS_DEFAULT_ACL: 'private'
           AWS_LOCATION: 'media'
+          # --- OpenAI Secrets ---
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ASSISTANT_ID: ${{ secrets.ASSISTANT_ID }}
         run: |
           KEY_FILE_PATH=~/.ssh/id_rsa_deploy
 
@@ -84,6 +87,8 @@ jobs:
             export AWS_S3_REGION_NAME='${{ env.AWS_S3_REGION_NAME }}'
             export AWS_DEFAULT_ACL='${{ env.AWS_DEFAULT_ACL }}'
             export AWS_LOCATION='${{ env.AWS_LOCATION }}'
+            export OPENAI_API_KEY='${{ env.OPENAI_API_KEY }}'
+            export ASSISTANT_ID='${{ env.ASSISTANT_ID }}'
 
             COMPOSE_FILE="docker-compose.prod.yml"
             if [ ! -f "\${COMPOSE_FILE}" ]; then

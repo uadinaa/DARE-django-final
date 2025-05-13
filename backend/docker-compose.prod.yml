@@ -125,6 +125,7 @@ services:
     depends_on:
       - backend
 
+
 volumes:
    postgres_data_prod:
    redis_data_prod:
