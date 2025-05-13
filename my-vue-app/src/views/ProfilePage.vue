@@ -24,16 +24,16 @@
       <hr class="border-secondary my-4">
 
       <div class="profile-stats d-flex justify-content-start gap-4 mb-4">
-        <router-link :to="{ name: 'user-following', params: { userId: user.id } }" class="stat-link">
-          <div class="stat-number">{{ followingCount }}</div>
-          <div class="stat-label">Подписки</div>
-        </router-link>
         <div v-if="user.profile.role === 'trainer'" class="stat-item">
           <router-link :to="{ name: 'user-followers', params: { userId: user.id } }" class="stat-link">
             <div class="stat-number">{{ followersCount }}</div>
             <div class="stat-label">Подписчики</div>
           </router-link>
         </div>
+        <router-link :to="{ name: 'user-following', params: { userId: user.id } }" class="stat-link">
+          <div class="stat-number">{{ followingCount }}</div>
+          <div class="stat-label">Подписки</div>
+        </router-link>
       </div>
 
       <div v-if="user.profile.role === 'trainer'" class="user-posts mt-4">

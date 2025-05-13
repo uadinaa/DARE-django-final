@@ -33,16 +33,16 @@
       <hr class="border-secondary my-4">
 
       <div class="profile-stats d-flex justify-content-start gap-4 mb-4">
-        <router-link :to="{ name: 'user-following', params: { userId: userData.id } }" class="stat-link">
-          <div class="stat-number">{{ userData.profile.following_count !== undefined ? userData.profile.following_count : '...' }}</div>
-          <div class="stat-label">Подписки</div>
-        </router-link>
         <div v-if="userData.profile.role === 'trainer'" class="stat-item">
           <router-link :to="{ name: 'user-followers', params: { userId: userData.id } }" class="stat-link">
             <div class="stat-number">{{ userData.profile.followers_count !== undefined ? userData.profile.followers_count : '...' }}</div>
             <div class="stat-label">Подписчики</div>
           </router-link>
         </div>
+        <router-link :to="{ name: 'user-following', params: { userId: userData.id } }" class="stat-link">
+          <div class="stat-number">{{ userData.profile.following_count !== undefined ? userData.profile.following_count : '...' }}</div>
+          <div class="stat-label">Подписки</div>
+        </router-link>
       </div>
 
       <div v-if="userData.profile.role === 'trainer'" class="user-posts mt-4">

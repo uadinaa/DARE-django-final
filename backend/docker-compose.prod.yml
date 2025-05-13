@@ -44,6 +44,8 @@ services:
       - AWS_LOCATION=${AWS_LOCATION}
       - CELERY_BROKER_URL=redis://redis:6379/0 
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ASSISTANT_ID=asst_XZ7qJDCi0scoBIoilR8CcluO
     depends_on:
       - db
       - redis
@@ -75,6 +77,8 @@ services:
       - AWS_LOCATION=${AWS_LOCATION}
       - CELERY_BROKER_URL=redis://redis:6379/0 
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ASSISTANT_ID=asst_XZ7qJDCi0scoBIoilR8CcluO
     depends_on:
       - redis
       - db
@@ -103,6 +107,8 @@ services:
       - AWS_LOCATION=${AWS_LOCATION}
       - CELERY_BROKER_URL=redis://redis:6379/0 
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ASSISTANT_ID=asst_XZ7qJDCi0scoBIoilR8CcluO
     depends_on:
       - redis
       - db

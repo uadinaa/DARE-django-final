@@ -22,21 +22,4 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Можно также добавить интерцептор ответов для обработки, например, ошибки 401 (не авторизован)
-// apiClient.interceptors.response.use(
-//   response => response,
-//   error => {
-//     if (error.response && error.response.status === 401) {
-//       // Например, удалить токен и перенаправить на страницу входа
-//       localStorage.removeItem('accessToken');
-//       localStorage.removeItem('refreshToken');
-//       // router.push({ name: 'Login' }); // Понадобится импортировать router сюда
-//       // Или просто перезагрузить страницу, чтобы сработали навигационные хуки
-//       window.location.href = '/login';
-//       console.error("Unauthorized, redirecting to login.");
-//     }
-//     return Promise.reject(error);
-//   }
-// );
-
 export default apiClient;
