@@ -2,6 +2,8 @@ from django.contrib.auth.models import User
 from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.http import Http404
 
@@ -73,19 +75,26 @@ class TopTrainersListView(generics.ListAPIView):
     
 class AllTrainersListView(generics.ListAPIView):
     """
-    Возвращает список всех пользователей с ролью 'тренер'.
-    Поддерживает пагинацию и поиск по search_fields.
+    List all users with role TRAINER, with pagination, search & ordering.
     """
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['username', 'first_name', 'last_name', 'profile__bio'] # Поля для поиска
-    ordering_fields = ['username', 'profile__level_score'] # Поля для возможной сортировки
-    ordering = ['-profile__level_score'] # Сортировка по умолчанию (например, по уровню)
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = [
+        'username',
+        'profile__role',
+        'profile__level_score',
+    ]
+    search_fields = ['username', 'profile__bio']
+    ordering_fields = ['username', 'profile__level_score']
+    ordering = ['-profile__level_score']
 
     def get_queryset(self):
-        # Напрямую фильтруем пользователей, у которых профиль имеет роль 'trainer'
-        return User.objects.filter(profile__role=Profile.Role.TRAINER).select_related('profile').all()
+        return (
+            User.objects
+                .filter(profile__role=Profile.Role.TRAINER)
+                .select_related('profile')
+        )
 
 
 # --- Admin Actions ---
