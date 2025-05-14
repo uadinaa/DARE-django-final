@@ -2,6 +2,8 @@ from django.contrib.auth.models import User
 from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.http import Http404
 
@@ -69,6 +71,30 @@ class TopTrainersListView(generics.ListAPIView):
                                .select_related('profile')\
                                .order_by('-profile__level_score')[:10]
         return queryset
+    
+    
+class AllTrainersListView(generics.ListAPIView):
+    """
+    List all users with role TRAINER, with pagination, search & ordering.
+    """
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = [
+        'username',
+        'profile__role',
+        'profile__level_score',
+    ]
+    search_fields = ['username', 'profile__bio']
+    ordering_fields = ['username', 'profile__level_score']
+    ordering = ['-profile__level_score']
+
+    def get_queryset(self):
+        return (
+            User.objects
+                .filter(profile__role=Profile.Role.TRAINER)
+                .select_related('profile')
+        )
 
 
 # --- Admin Actions ---
