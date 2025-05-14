@@ -14,37 +14,38 @@
         <img :src="user.profile?.avatar_url || defaultAvatar" alt="Аватар" class="profile-avatar me-4"/>
         <div class="profile-header-info">
           <h2 class="text-light mb-1">{{ user.username }}</h2>
+
           <p class="trainer-level-display mb-2 small">Уровень: {{ user.profile?.level_score || 0 }}</p>
           <div class="d-flex flex-wrap gap-2 align-items-center">
-            <router-link 
+            <router-link
               v-if="isOwnProfile"
-              :to="{ name: 'profile-edit' }" 
+              :to="{ name: 'profile-edit' }"
               class="btn btn-outline-light btn-sm"
             >
               Редактировать профиль
             </router-link>
-            
+
             <template v-if="isOwnProfile && user.profile?.role !== 'trainer'">
-              <button 
+              <button
                 v-if="user.profile?.verification_status === 'pending'"
-                class="btn btn-secondary btn-sm" 
+                class="btn btn-secondary btn-sm"
                 disabled
               >
                 Запрос в обработке
               </button>
-              <button 
+              <button
                 v-else-if="user.profile?.verification_status === 'rejected' && !user.profile?.can_request_verification_status"
-                class="btn btn-warning btn-sm" 
-                disabled 
+                class="btn btn-warning btn-sm"
+                disabled
                 title="Повторная заявка будет доступна позже"
               >
                 Заявка отклонена
               </button>
-              <button 
-                v-else 
-                class="btn btn-success btn-sm" 
+              <button
+                v-else
+                class="btn btn-success btn-sm"
                 @click="goToVerificationPage"
-                :disabled="!user.profile?.can_request_verification_status" 
+                :disabled="!user.profile?.can_request_verification_status"
               >
                 {{ (user.profile?.verification_status === 'rejected' && user.profile?.can_request_verification_status) ? 'Подать заявку снова' : 'Стать тренером' }}
               </button>
@@ -64,6 +65,11 @@
              <div v-if="isOwnProfile && user.profile?.role === 'trainer'" class="mt-2">
                 <p class="text-success small mb-0">Вы подтвержденный тренер.</p>
             </div>
+
+          <router-link :to="{ name: 'users-stats', params: { userId: user.id } }" class="btn btn-outline-light btn-sm">
+            Моя статистика
+          </router-link>
+
         </div>
       </div>
 
@@ -71,7 +77,7 @@
         <h5 class="text-light">О себе:</h5>
         <p class="text-light" style="white-space: pre-wrap;">{{ user.profile?.bio || 'Информация о себе отсутствует.' }}</p>
       </div>
-      
+
       <hr class="border-secondary my-4">
 
       <div class="profile-stats d-flex justify-content-start gap-4 mb-4">
@@ -86,7 +92,7 @@
           <div class="stat-label">Подписки</div>
         </router-link>
       </div>
-      
+
       <div v-if="user.profile?.role === 'trainer'" class="user-posts mt-4">
         <h4 class="text-success mb-3">Мои посты:</h4>
         <UserPostList :user-id="user.id" />
@@ -103,8 +109,8 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import apiClient from '@/services/api';
-import UserPostList from '@/components/Post/UserPostList.vue'; 
 import { jwtDecode } from 'jwt-decode'; // Для определения ID текущего пользователя
+import UserPostList from '@/components/Post/UserPostList.vue'; // Предполагается, что этот компонент существует
 
 
 const route = useRoute();
@@ -117,7 +123,6 @@ const defaultAvatar = ref('@/assets/default-avatar.png'); // Используе�
 // Эти значения теперь берем из user.profile, если они там есть, иначе оставляем старые ref для обратной совместимости или если API их не всегда шлет
 const followingCount = ref(0); // Будет использоваться, если user.profile.following_count нет
 const followersCount = ref(0); // Будет использоваться, если user.profile.followers_count нет
-
 const currentUserId = ref(null); // ID текущего аутентифицированного пользователя
 
 // Определяем, просматривается ли собственный профиль
@@ -138,7 +143,7 @@ const fetchUserData = async () => {
     // Если это маршрут для своего профиля (например, /profile)
     if (route.name === 'profile' || (route.params.userId && Number(route.params.userId) === currentUserId.value)) {
       response = await apiClient.get('/users/me/');
-    } 
+    }
     // Если это маршрут для просмотра профиля другого пользователя
     else if (route.params.userId) {
       response = await apiClient.get(`/users/${route.params.userId}/`);
@@ -190,7 +195,7 @@ onMounted(() => {
     //  router.push({ name: 'login' }); // Перенаправить на логин, если токена нет
      return;
   }
-  
+
   fetchUserData();
 });
 
@@ -198,7 +203,7 @@ onMounted(() => {
 watch(
   () => route.params.userId,
   (newUserId, oldUserId) => {
-    // Перезагружаем, только если newUserId существует (т.е. это user-detail) 
+    // Перезагружаем, только если newUserId существует (т.е. это user-detail)
     // и он отличается от старого, или если мы перешли на user-detail с другого типа страницы
     if (newUserId && newUserId !== oldUserId && route.name === 'user-detail') {
       fetchUserData();
@@ -223,13 +228,15 @@ const goToVerificationPage = () => {
 
 <style scoped>
 .profile-page { color: var(--vt-c-text-dark-1); }
-.profile-avatar { 
-  width: 100px; 
+.profile-avatar {
   height: 100px;
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid var(--vt-c-divider-dark-1);
 }
+.profile-header { /* Стили для основного блока с аватаром и именем */ }
+
+
 .profile-header-info {
   /* Добавляем немного пространства между кнопками, если они в одну строку */
 }
@@ -266,4 +273,5 @@ const goToVerificationPage = () => {
 .text-danger { color: #dc3545 !important; } /* Bootstrap danger color */
 .text-info { color: #0dcaf0 !important; }   /* Bootstrap info color */
 
+.user-posts { /* Стили для блока с постами, если нужны */ }
 </style>

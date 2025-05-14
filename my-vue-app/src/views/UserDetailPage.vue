@@ -14,10 +14,10 @@
         <div class="profile-header-info">
           <h2 class="text-light mb-1">{{ userData.username }}</h2>
           <p class="trainer-level-display mb-2 small">Уровень: {{ userData.profile.level_score || 0 }}</p>
-          
-          <button 
-            v-if="canShowFollowButton" 
-            @click="toggleFollow" 
+
+          <button
+            v-if="canShowFollowButton"
+            @click="toggleFollow"
             :class="['btn', 'btn-sm', 'mb-3', isFollowing ? 'btn-outline-light' : 'btn-success']"
             :disabled="followLoading">
             <span v-if="followLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -90,10 +90,10 @@ const snackbar = reactive({
 
 // Определяем, можно ли показывать кнопку "Подписаться"
 const canShowFollowButton = computed(() => {
-  return isLoggedIn.value && 
-         currentUser.value?.id !== null && 
+  return isLoggedIn.value &&
+         currentUser.value?.id !== null &&
          userData.value?.id !== null &&
-         currentUser.value.id !== userData.value.id && 
+         currentUser.value.id !== userData.value.id &&
          userData.value?.profile?.role === 'trainer';
 });
 
@@ -200,8 +200,8 @@ watch(() => props.userId, (newUserId) => {
 
 <style scoped>
 .user-detail-page { color: var(--vt-c-text-dark-1); }
-.profile-avatar { 
-  width: 100px; 
+.profile-avatar {
+  width: 100px;
   height: 100px;
   border-radius: 50%;
   object-fit: cover;
@@ -225,7 +225,7 @@ watch(() => props.userId, (newUserId) => {
   z-index: 1000;
   font-size: 0.9rem;
 }
-.snackbar.bg-success { 
+.snackbar.bg-success {
   background-color: var(--color-accent);
 }
 .trainer-level-display {

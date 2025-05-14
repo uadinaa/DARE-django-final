@@ -23,6 +23,9 @@ from core.permissions import IsAdminUser, IsProfileOwnerOrAdmin
 from .models import Profile, VerificationToken
 from .serializers import ProfileSerializer, RegisterSerializer, UserSerializer, TrainerVerificationRequestSerializer
 
+from django.db.models import Count
+from datetime import timedelta
+from interactions.models import Follow
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -289,3 +292,56 @@ class AdminVerifyTrainerView(APIView):
             return Response({"detail": f"Заявка пользователя {user_to_verify.username} отклонена."}, status=status.HTTP_200_OK)
         else:
             return Response({"detail": "Некорректное действие."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TrainerStatsView(generics.RetrieveAPIView):
+    """
+    Возвращает статистику для текущего авторизованного тренера.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = None  # Или мб можно создать специальный сериализатор для статистики
+
+    def get(self, request, *args, **kwargs):
+        trainer = request.user  # Получаем текущего авторизованного пользователя
+        # Проверяем тренер? (опционально, но рекомендуется)
+        try:
+            profile = Profile.objects.get(user=trainer)
+            if profile.role != Profile.Role.TRAINER:
+                return Response(
+                    {"error": "Данный пользователь не является тренером."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Profile.DoesNotExist:
+            return Response(
+                {"error": "Профиль пользователя не найден."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # получаем количество новых подписчиков за последние 7 дней
+        today = timezone.now().date()
+        dates = [(today - timedelta(days=i)) for i in range(7)]
+        dates.reverse()
+        dates.reverse()
+
+        daily_counts = []
+
+        for date in dates:
+            count = Follow.objects.filter(
+                followed=trainer,
+                created_at__date=date
+            ).count()
+            daily_counts.append(count)
+
+        # получаем текущий ранг
+        current_rank = profile.level_score
+
+        stats_data = {
+            "dailySubscribers": {
+                'labels': [date.strftime('%Y-%m-%d') for date in dates],
+                'counts': daily_counts
+            },
+            "currentRank": current_rank,
+            # если что здесь можно добавить другие статистические данные
+        }
+
+        return Response(stats_data, status=status.HTTP_200_OK)

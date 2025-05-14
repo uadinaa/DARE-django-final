@@ -13,6 +13,7 @@ from .views import (
     RequestTrainerVerificationView,
     AdminVerifyTrainerView,
     ProcessTrainerVerificationView,
+    TrainerStatsView,
 )
 
 router = DefaultRouter()
@@ -22,6 +23,7 @@ urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
     path("me/", CurrentUserDetailView.as_view(), name="current-user-detail"),
     path("me/profile/", UserProfileUpdateView.as_view(), name="current-user-profile-update"),
+    path("me/stats/", TrainerStatsView.as_view(), name="trainer-stats"),
     path("", include(router.urls)),
     path('trainers/top/', TopTrainersListView.as_view(), name='top-trainers-list'),
     path('trainers/all/', AllTrainersListView.as_view(), name='all-trainers-list'),

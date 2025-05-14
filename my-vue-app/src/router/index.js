@@ -10,7 +10,8 @@ import FollowersListPage from '@/views/FollowersListPage.vue';
 import SettingsPage from '@/views/SettingsPage.vue';
 import PostDetailPage from '@/views/PostDetailPage.vue';
 import UserDetailPage from '@/views/UserDetailPage.vue';
-import BecomeTrainerPage from '@/views/BecomeTrainerPage.vue'; 
+import BecomeTrainerPage from '@/views/BecomeTrainerPage.vue';
+import TrainerStatsPage from "@/views/TrainerStatsPage.vue";
 
 const routes = [
   {
@@ -43,11 +44,11 @@ const routes = [
     component: ProfileEditPage,
     meta: { layout: 'MainLayout', requiresAuth: true }
   },
-  { 
+  {
     path: '/become-trainer',
     name: 'become-trainer-verification',
     component: BecomeTrainerPage,
-    meta: { layout: 'MainLayout', requiresAuth: true } 
+    meta: { layout: 'MainLayout', requiresAuth: true }
   },
   {
     path: '/settings',
@@ -84,6 +85,13 @@ const routes = [
     meta: { layout: 'MainLayout', requiresAuth: true }
   },
   {
+    path: '/users/:userId/stats',
+    name: 'users-stats',
+    component: TrainerStatsPage,
+    props: true,
+    meta: { layout: 'MainLayout', requiresAuth: true }
+  },
+  {
     path: '/chat',
     name: 'chat',
     component: () => import('../views/ChatBot.vue'),
@@ -98,7 +106,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
-  const isLoggedIn = !!localStorage.getItem('accessToken'); 
+  const isLoggedIn = !!localStorage.getItem('accessToken');
 
   if (requiresAuth && !isLoggedIn) {
     next({ name: 'login' });
