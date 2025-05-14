@@ -13,11 +13,11 @@
           <div class="spinner-border spinner-border-sm text-success" role="status"></div>
           <p class="mb-0 small">Подгружаем еще посты...</p>
         </div>
-        <div v-if="!hasNextPage && posts.length > 0 && !initialLoading && !loadingMore" class="text-center text-muted small py-3">
+        <div v-if="!hasNextPage && posts.length > 0 && !initialLoading && !loadingMore" class="text-center small py-3">
           Больше постов нет.
         </div>
       </div>
-      <p v-else class="text-muted small mt-3">У этого пользователя еще нет постов.</p>
+      <p v-else class="small mt-3">У этого пользователя еще нет постов.</p>
     </div>
   </template>
   

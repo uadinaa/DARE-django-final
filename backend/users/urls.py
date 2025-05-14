@@ -10,6 +10,9 @@ from .views import (
     TopTrainersListView,
     CurrentUserDetailView,
     AllTrainersListView,
+    RequestTrainerVerificationView,
+    AdminVerifyTrainerView,
+    ProcessTrainerVerificationView,
 )
 
 router = DefaultRouter()
@@ -24,7 +27,8 @@ urlpatterns = [
     path('trainers/all/', AllTrainersListView.as_view(), name='all-trainers-list'),
     # Admin actions
     path("<int:pk>/block/", AdminUserBlockView.as_view(), name="admin-user-block"),
-    path(
-        "<int:pk>/unblock/", AdminUserUnblockView.as_view(), name="admin-user-unblock"
-    ),
+    path("<int:pk>/unblock/", AdminUserUnblockView.as_view(), name="admin-user-unblock"),
+    path("me/request-trainer-verification/", RequestTrainerVerificationView.as_view(), name="request-trainer-verification"), # URL для админских действий (пример)
+    path("admin/verify-trainer/<int:user_id>/<str:verification_action>/", AdminVerifyTrainerView.as_view(), name="admin-verify-trainer"), # verification_action может быть 'approve' или 'reject'
+    path("verify-trainer-action/<str:user_id_b64>/<uuid:token>/<str:action>/", ProcessTrainerVerificationView.as_view(), name="admin-process-verification"),
 ]

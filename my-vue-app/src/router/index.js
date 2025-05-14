@@ -10,6 +10,7 @@ import FollowersListPage from '@/views/FollowersListPage.vue';
 import SettingsPage from '@/views/SettingsPage.vue';
 import PostDetailPage from '@/views/PostDetailPage.vue';
 import UserDetailPage from '@/views/UserDetailPage.vue';
+import BecomeTrainerPage from '@/views/BecomeTrainerPage.vue'; 
 
 const routes = [
   {
@@ -41,6 +42,12 @@ const routes = [
     name: 'profile-edit',
     component: ProfileEditPage,
     meta: { layout: 'MainLayout', requiresAuth: true }
+  },
+  { 
+    path: '/become-trainer',
+    name: 'become-trainer-verification',
+    component: BecomeTrainerPage,
+    meta: { layout: 'MainLayout', requiresAuth: true } 
   },
   {
     path: '/settings',

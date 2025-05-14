@@ -7,6 +7,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 ALLOWED_HOSTS = ["*"]
 
+# Email verification
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' # или 'django.core.mail.backends.console.EmailBackend' для теста
+EMAIL_HOST = 'smtp.gmail.com' # твой SMTP хост
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'eomino1607@gmail.com' # твой email
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = 'eomino1607@gmail.com' # Адрес отправителя по умолчанию
+
 # Application definition
 
 INSTALLED_APPS = [

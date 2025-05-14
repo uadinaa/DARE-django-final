@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Заявка на верификацию тренера</title>
+</head>
+<body>
+    <h2>Заявка на верификацию тренера</h2>
+    <p>Здравствуйте, Администратор!</p>
+    <p>Пользователь <strong>{{ user.username }}</strong> (ID: {{ user.id }}) подал заявку на получение статуса тренера.</p>
+
+    <h4>Документы:</h4>
+    <ul>
+        <li>Удостоверение: 
+            {% if identity_document_url %}
+                <a href="{{ identity_document_url }}">Просмотреть удостоверение</a>
+            {% else %}
+                Не загружено
+            {% endif %}
+        </li>
+        <li>Квалификация: 
+            {% if qualification_document_url %}
+                <a href="{{ qualification_document_url }}">Просмотреть квалификацию</a>
+            {% else %}
+                Не загружено
+            {% endif %}
+        </li>
+    </ul>
+
+    <p>Пожалуйста, рассмотрите заявку:</p>
+    <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+            <td>
+                <table cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td style="border-radius: 5px; background-color: #28a745; padding: 10px 20px;">
+                            <a href="{{ approve_url }}" target="_blank" style="color: #ffffff; text-decoration: none; font-weight: bold;">Одобрить</a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td width="20"></td> {# Пробел между кнопками #}
+            <td>
+                <table cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td style="border-radius: 5px; background-color: #dc3545; padding: 10px 20px;">
+                            <a href="{{ reject_url }}" target="_blank" style="color: #ffffff; text-decoration: none; font-weight: bold;">Отклонить</a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <br>
+    <p><small>Если кнопки не работают, вы можете обработать заявку через админ-панель.</small></p>
+</body>
+</html>

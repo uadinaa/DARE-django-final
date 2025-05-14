@@ -6,9 +6,6 @@ body {
   background-image: linear-gradient(to bottom right, var(--color-background-dark-secondary), var(--color-background-dark));
   background-repeat: no-repeat;
   background-attachment: fixed;
-  /* padding-top: 65px; */ /* <--- УДАЛЯЕМ ЭТОТ ОТСТУП! Он больше не нужен для MainLayout */
-  /* min-height: 100vh; - это уже есть в base.css для body */
-  /* margin: 0; - это уже есть в base.css в правиле для * */
 }
 
 /* Стили для корневого элемента приложения #app */

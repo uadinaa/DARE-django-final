@@ -33,14 +33,6 @@
               <input type="password" id="password2" class="form-control form-control-dark" v-model="formData.password2" required>
             </div>
 
-            <div class="mb-3">
-              <label for="role" class="form-label">Роль:</label>
-              <select id="role" class="form-select form-select-dark" v-model="formData.role" required>
-                <option value="user" class="text-dark">Пользователь</option>
-                <option value="trainer" class="text-dark">Тренер</option>
-              </select>
-            </div>
-
             <button type="submit" :disabled="loading" class="btn btn-success w-100 fw-bold mt-3">
               {{ loading ? 'Регистрация...' : 'Зарегистрироваться' }}
             </button>
@@ -66,7 +58,7 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const formData = reactive({
-    username: '', email: '', password: '', password2: '', role: 'user',
+    username: '', email: '', password: '', password2: '',
 });
 const loading = ref(false);
 const errorMessage = ref('');
@@ -80,9 +72,9 @@ const handleRegister = async () => {
     try {
         const response = await apiClient.post('/users/register/', {
              username: formData.username, email: formData.email, password: formData.password,
-             password2: formData.password2, role: formData.role,
+             password2: formData.password2,
         });
-      // router.push('/login') можно по сути сразу после реги перекинуть в логин?
+        router.push('/login') // можно по сути сразу после реги перекинуть в логин?
         successMessage.value = `Пользователь ${response.data.username} успешно зарегистрирован!`;
     } catch (error) {
         if (error.response && error.response.data) {
