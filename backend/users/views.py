@@ -149,7 +149,7 @@ class RequestTrainerVerificationView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def _create_action_token(self, user, action_type):
-        # Удаляем старые неиспользованные токены этого типа для этого пользователя
+        # Remove unused old tokens
         VerificationToken.objects.filter(user=user, action=action_type, is_used=False).delete()
         token_obj = VerificationToken.objects.create(user=user, action=action_type)
         return token_obj.token
@@ -170,17 +170,16 @@ class RequestTrainerVerificationView(generics.GenericAPIView):
             profile.verification_requested_at = timezone.now()
             profile.save()
 
-            # Генерация токенов для действий
+            # Token generation
             approve_token = self._create_action_token(request.user, 'approve')
             reject_token = self._create_action_token(request.user, 'reject')
 
-            # Формирование URL для действий
+            # Action URLs
             current_site = get_current_site(request).domain
-            # Важно: Имена 'admin-process-verification' должны быть определены в urls.py
             approve_url = f"http://{current_site}{reverse('admin-process-verification', kwargs={'user_id_b64': urlsafe_base64_encode(force_bytes(request.user.id)), 'token': approve_token, 'action': 'approve'})}"
             reject_url = f"http://{current_site}{reverse('admin-process-verification', kwargs={'user_id_b64': urlsafe_base64_encode(force_bytes(request.user.id)), 'token': reject_token, 'action': 'reject'})}"
 
-            # Подготовка контекста для email шаблона
+            # Email context
             email_context = {
                 'user': request.user,
                 'profile': profile,
@@ -190,34 +189,13 @@ class RequestTrainerVerificationView(generics.GenericAPIView):
                 'reject_url': reject_url,
             }
 
-            # Отправка HTML письма
             subject = f"Заявка на верификацию тренера: {request.user.username}"
-            # Текстовая версия письма
             text_content = render_to_string('emails/verification_request_admin.txt', email_context)
-            # HTML версия письма
             html_content = render_to_string('emails/verification_request_admin.html', email_context)
-            
-            admin_email = 'eomino1607@gmail.com' 
-            
+
+            admin_email = 'eomino1607@gmail.com'
             msg = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, [admin_email])
             msg.attach_alternative(html_content, "text/html")
-            
-            # Вложение файлов (если очень нужно, но не рекомендуется для email)
-            if profile.identity_document:
-                try:
-                    profile.identity_document.open('rb') # Открываем файл для чтения в бинарном режиме
-                    msg.attach(profile.identity_document.name.split('/')[-1], profile.identity_document.read(), profile.identity_document.file.content_type)
-                    profile.identity_document.close()
-                except Exception as e_file:
-                    print(f"Could not attach identity document: {e_file}")
-            
-            if profile.qualification_document:
-                try:
-                    profile.qualification_document.open('rb')
-                    msg.attach(profile.qualification_document.name.split('/')[-1], profile.qualification_document.read(), profile.qualification_document.file.content_type)
-                    profile.qualification_document.close()
-                except Exception as e_file:
-                    print(f"Could not attach qualification document: {e_file}")
 
             try:
                 msg.send()
@@ -225,11 +203,12 @@ class RequestTrainerVerificationView(generics.GenericAPIView):
                 print(f"Ошибка отправки email: {e}")
 
             return Response(ProfileSerializer(profile, context={'request': request}).data, status=status.HTTP_200_OK)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProcessTrainerVerificationView(APIView):
-    permission_classes = [AllowAny] # Доступ по токену, не требует авторизации админа в момент клика
+    permission_classes = [AllowAny]
 
     def get(self, request, user_id_b64, token, action, *args, **kwargs):
         try:
@@ -237,11 +216,10 @@ class ProcessTrainerVerificationView(APIView):
             user = User.objects.get(pk=user_id)
             verification_token = VerificationToken.objects.get(user=user, token=token, action=action, is_used=False)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist, VerificationToken.DoesNotExist):
-            # Можно рендерить страницу с сообщением об ошибке
             return render(request, 'verification_result.html', {'message': 'Недействительная или истекшая ссылка для верификации.'})
 
         profile = user.profile
-        
+
         if profile.verification_status != Profile.VerificationStatus.PENDING:
             return render(request, 'verification_result.html', {'message': 'Эта заявка уже была обработана.'})
 
@@ -252,12 +230,11 @@ class ProcessTrainerVerificationView(APIView):
             # TODO: Отправить уведомление пользователю об одобрении
         elif action == "reject":
             profile.verification_status = Profile.VerificationStatus.REJECTED
-            # profile.rejection_reason = "Отклонено по ссылке из email." # Можно добавить
             message_to_render = f"Заявка пользователя {user.username} на статус тренера отклонена."
             # TODO: Отправить уведомление пользователю об отклонении
         else:
             return render(request, 'verification_result.html', {'message': 'Некорректное действие.'})
-        
+
         profile.save()
         verification_token.is_used = True
         verification_token.save()
