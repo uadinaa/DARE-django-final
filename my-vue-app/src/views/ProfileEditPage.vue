@@ -27,7 +27,7 @@
           Текущий аватар: <img :src="currentAvatarUrl" alt="Текущий аватар" class="img-thumbnail" style="max-width: 50px; max-height: 50px; vertical-align: middle; margin-left: 5px;">
         </small>
       </div>
-       <div class="mb-3 form-check" v-if="isCurrentUserTrainer">
+       <div class="mb-3 form-check" v-if="isTrainer">
           <input type="checkbox" class="form-check-input" id="canMonetize" v-model="formData.can_monetize_posts">
           <label class="form-check-label" for="canMonetize">Разрешить монетизацию постов</label>
         </div>
@@ -53,7 +53,11 @@ const router = useRouter();
 // const authStore = useAuthStore();
 // const isCurrentUserTrainer = computed(() => authStore.currentUser?.profile?.role === 'trainer');
 // Заглушка для роли, замените на реальную логику из store
-const isCurrentUserTrainer = ref(true); 
+const currentUser = ref(null);
+const loadingCurrentUser = ref(true);
+const isTrainer = computed(() => {
+  return currentUser.value && currentUser.value.profile && currentUser.value.profile.role === 'trainer';
+});
 
 const initialUserData = ref(null); // Для хранения исходных данных пользователя + профиля
 const formData = reactive({ // Для полей, которые можно редактировать
@@ -69,6 +73,20 @@ const profileError = ref('');
 const saving = ref(false);
 const updateError = ref('');
 const updateSuccess = ref(false);
+
+const fetchCurrentUser = async () => {
+  loadingCurrentUser.value = true;
+  try {
+    const response = await apiClient.get('/users/me/'); // Эндпоинт для получения данных текущего пользователя
+    currentUser.value = response.data;
+    // console.log('Current user data:', currentUser.value); // Для отладки
+  } catch (error) {
+    console.error('Error fetching current user on HomePage:', error);
+    currentUser.value = null; // В случае ошибки, пользователь не определен
+  } finally {
+    loadingCurrentUser.value = false;
+  }
+};
 
 const fetchProfileData = async () => {
   loadingProfile.value = true;
@@ -161,7 +179,10 @@ const handleProfileUpdate = async () => {
   }
 };
 
-onMounted(fetchProfileData);
+onMounted(() => {
+  fetchProfileData();
+  fetchCurrentUser();
+});
 </script>
 
 <style scoped>
