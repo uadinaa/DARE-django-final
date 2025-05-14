@@ -1,22 +1,29 @@
-# Социальная Фитнес-Платформа
+# 🏋️‍♂️ Social Fitness Platform
 
-Этот проект включает **Vue.js** фронтенд и **Django** бэкенд.
+This project includes a **Vue.js** frontend and a **Django** backend.
 
-## 📥 Предварительные требования
+---
 
-Убедитесь, что у вас установлены:
+## Link to deployed project
+Project is available at [http://139.59.64.140/](http://139.59.64.140/)
+
+---
+
+## 📥 Prerequisites for local launch
+
+Make sure the following are installed:
 
 - [Docker](https://www.docker.com/products/docker-desktop/)
-- Docker Compose (обычно идет вместе с Docker Desktop)
-- Node.js (≥ 18.x) & npm (для фронтенда)
-- Vue CLI (если используется): `npm install -g @vue/cli` (или используйте `npm run serve`/`npm run dev`)
+- Docker Compose (usually bundled with Docker Desktop)
+- Node.js (≥ 18.x) & npm (for frontend)
+- Vue CLI (if used): `npm install -g @vue/cli` (or use `npm run serve` / `npm run dev`)
 - Git
 
 ---
 
-## 🚀 Инструкции по установке и запуску
+## 🚀 Installation & Launch Instructions
 
-### 1. Клонирование репозитория
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/uadinaa/DARE-django-final.git
@@ -25,56 +32,56 @@ cd DARE-django-final
 
 ---
 
-### 2. Бэкенд (Django)
+### 2. Backend (Django)
 
-Бэкенд запускается через Docker Compose (Django + PostgreSQL).
+The backend runs via Docker Compose (Django + PostgreSQL).
 
-Перейдите в папку бэкенда:
+**Navigate to the backend folder**:
 
 ```bash
 cd backend
 ```
 
-**Сборка имэджа:**
+**Build the image:**
 
 ```bash
 docker-compose build
 ```
 
-**Запуск контейнеров:**
+**Start the containers:**
 
 ```bash
 docker-compose up -d
 ```
 
-**Создание суперпользователя (опционально):**
+**Create a superuser (optional):**
 
 ```bash
 docker-compose exec backend python manage.py createsuperuser
 ```
 
-**Проверка:**
+**Check:**
 
 - Django: [http://localhost:8000](http://localhost:8000)
 - Админка: [http://localhost:8000/admin/](http://localhost:8000/admin/)
 
 ---
 
-### 3. Фронтенд (Vue.js)
+### 3. Frontend (Vue.js)
 
-Перейдите в папку фронтенда:
+**Navigate to the frontend folder**:
 
 ```bash
 cd ../frontend
 ```
 
-**Установка зависимостей:**
+**Install dependencies:**
 
 ```bash
 npm install
 ```
 
-**Запуск сервера разработки:**
+**Run the dev server:**
 
 ```bash
 npm run serve
@@ -82,7 +89,7 @@ npm run serve
 npm run dev
 ```
 
-**Проверка:**
+**Check:**
 
 - Vue: [http://localhost:8080](http://localhost:8080) или [http://localhost:5173](http://localhost:5173) (если Vite)
 
@@ -94,70 +101,72 @@ npm run dev
 
 ---
 
-### Аутентификация (`/api/`)
+### Authentication (`/api/`)
 
-1. **Регистрация пользователя** — `POST /api/users/register/`
-2. **Получение JWT токенов (Логин)** — `POST /api/token/`
-3. **Обновление Access токена** — `POST /api/token/refresh/`
-4. **Logout** — `POST /api/users/logout/`
-
----
-
-### Пользователи и Профили (`/api/users/`)
-
-5. **Список пользователей** — `GET /api/users/`
-6. **Детали пользователя** — `GET /api/users/{user_id}/`
-7. **Список профилей** — `GET /api/users/profiles/`
-8. **Просмотр/обновление своего профиля** — `GET, PUT, PATCH /api/users/profile/`
+1. **User register** — `POST /api/users/register/`
+2. **Getting JWT token (login)** — `POST /api/token/`
+3. **Updating Access token** — `POST /api/token/refresh/`
 
 ---
 
-### Посты (`/api/posts/`)
+### Users/Trainers and Profiles (`/api/users/`)
 
-9. **Список всех постов** — `GET /api/posts/`
-10. **Лента подписок** — `GET /api/posts/subscriptions/`
-11. **Создание поста** — `POST /api/posts/`
-12. **Детали/обновление/удаление поста** — `GET, PUT, PATCH, DELETE /api/posts/{post_id}/`
-
----
-
-### Комментарии (`/api/posts/{post_id}/comments/`)
-
-13. **Список комментариев** — `GET /api/posts/{post_id}/comments/`
-14. **Создание комментария** — `POST /api/posts/{post_id}/comments/`
-15. **Детали/обновление/удаление комментария** — `GET, PUT, PATCH, DELETE /api/posts/{post_id}/comments/{comment_id}/`
+4. **List of all users by pagination** — `GET /api/users/`
+5. **Current user detail** — `GET /api/users/me/`
+6. **Current user profile update/get** — `GET, PUT, PATCH /api/users/me/profile/`
+7. **Certain user details** — `GET /api/users/{user_id}/`
+8. **List of all trainers** — `GET /api/users/trainers/all/`
+9. **Top 10 trainers** — `GET /api/users/trainers/top/`
 
 ---
 
-### Лайки (`/api/posts/{post_id}/like/`)
+### Posts (`/api/posts/`)
 
-16. **Лайк/Анлайк поста** — `POST, DELETE /api/posts/{post_id}/like/`
-
----
-
-### Подписки (`/api/interactions/`)
-
-17. **Подписаться на пользователя** — `POST /api/interactions/follow/{user_pk}/`
-18. **Отписаться от пользователя** — `DELETE /api/interactions/unfollow/{user_pk}/`
-19. **Список подписок пользователя** — `GET /api/interactions/users/{user_pk}/following/`
-20. **Список подписчиков пользователя** — `GET /api/interactions/users/{user_pk}/followers/`
+10. **List of all posts** — `GET /api/posts/`
+11. **Feed of subscriptions** — `GET /api/posts/subscriptions/`
+12. **Post creating** — `POST /api/posts/`
+13. **Details/update/delete post** — `GET, PUT, PATCH, DELETE /api/posts/{post_id}/`
 
 ---
 
-### Админские действия (`/api/users/`)
+### Comments (`/api/posts/{post_id}/comments/`)
 
-21. **Заблокировать пользователя** — `POST /api/users/{user_pk}/block/`
-22. **Разблокировать пользователя** — `POST /api/users/{user_pk}/unblock/`
-
----
-
-## 🔒 Заметки по Аутентификации (JWT)
-
-- **Authorization заголовок:** `Authorization: Bearer <your_access_token>`
-- **Обновление токена:** используйте `POST /api/token/refresh/`
-- **Logout:** удалите токены на клиенте и отправьте `POST /api/users/logout/` с `refresh` токеном.
+14. **List of all comments** — `GET /api/posts/{post_id}/comments/`
+15. **Comment creating** — `POST /api/posts/{post_id}/comments/`
+16. **Details/update/delete comment** — `GET, PUT, PATCH, DELETE /api/posts/{post_id}/comments/{comment_id}/`
 
 ---
 
-Хочешь, я ещё сразу подготовлю готовый `.md` файл для скачивания? 🚀  
-(Могу сделать его чуть красивее: с оглавлением, якорями, эмодзи для разделов и т.д.) Хочешь?
+### Likes (`/api/posts/{post_id}/like/`)
+
+17. **Like/Unlike post** — `POST, DELETE /api/posts/{post_id}/like/`
+
+---
+
+### Subscriptions (`/api/interactions/`)
+
+18. **Subscript to trainer** — `POST /api/interactions/follow/{user_pk}/`
+19. **Unsubscript from trainer** — `DELETE /api/interactions/unfollow/{user_pk}/`
+20. **List of followings** — `GET /api/interactions/users/{user_pk}/following/`
+21. **List of followers** — `GET /api/interactions/users/{user_pk}/followers/`
+
+---
+
+### Admin actions (`/api/users/`)
+
+22. **Block user** — `POST /api/users/{user_pk}/block/`
+23. **Unblock user** — `POST /api/users/{user_pk}/unblock/`
+
+---
+
+### Verification (`/api/users/`)
+
+24. **Trainer verification** — `POST /api/users/me/request-trainer-verification/`
+25. **Admin verificates trainers** — `POST /api/users/admin/verify-trainer/<int:user_id>/<str:verification_action>/`
+
+---
+
+## 🔒 Notions about auth (JWT)
+
+- **Authorization header:** `Authorization: Bearer <your_access_token>`
+- **Refresh token:** use `POST /api/token/refresh/`
