@@ -46,6 +46,7 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: fitness_db
           DB_USER: postgres
+          EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }} 
           # --- AWS S3 Secrets/Config ---
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -81,6 +82,7 @@ jobs:
             export DB_NAME='${{ env.DB_NAME }}'
             export DB_USER='${{ env.DB_USER }}'
             export DB_HOST=db
+            export EMAIL_HOST_PASSWORD='${{ env.EMAIL_HOST_PASSWORD }}'
             export AWS_ACCESS_KEY_ID='${{ env.AWS_ACCESS_KEY_ID }}'
             export AWS_SECRET_ACCESS_KEY='${{ env.AWS_SECRET_ACCESS_KEY }}'
             export AWS_STORAGE_BUCKET_NAME='${{ env.AWS_STORAGE_BUCKET_NAME }}'

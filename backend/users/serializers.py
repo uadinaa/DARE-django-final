@@ -6,13 +6,13 @@ from .models import Profile
 
 class ProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username", read_only=True)
-    email = serializers.EmailField(
-        source="user.email", read_only=True
-    )  # Добавлено email
+    email = serializers.EmailField(source="user.email", read_only=True)  # Добавлено email
     role_display = serializers.CharField(source="get_role_display", read_only=True)
     avatar_url = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
     following_count = serializers.SerializerMethodField() 
+    verification_status_display = serializers.CharField(source='get_verification_status_display', read_only=True)
+    can_request_verification_status = serializers.BooleanField(source='can_request_verification', read_only=True)
 
     class Meta:
         model = Profile
@@ -27,7 +27,11 @@ class ProfileSerializer(serializers.ModelSerializer):
             'level_score',
             'levels_last_calculated_at',
             'followers_count',
-            'following_count'
+            'following_count',
+            'verification_status', # Сам статус (код)
+            'verification_status_display', # Отображаемый статус
+            'can_request_verification_status', # Может ли пользователь сейчас подать заявку
+            'verification_requested_at'
         ]
         read_only_fields = [
             'id', 'username',
@@ -36,7 +40,11 @@ class ProfileSerializer(serializers.ModelSerializer):
             'is_blocked',
             'avatar_url',
             'followers_count',
-            'following_count'
+            'following_count',
+            'verification_status',
+            'verification_status_display',
+            'can_request_verification_status',
+            'verification_requested_at'
             ]
         # Сделаем 'avatar' write_only, если отдаем только 'avatar_url'
         extra_kwargs = {"avatar": {"write_only": True}}
@@ -78,13 +86,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         label="Confirm Password",
         style={"input_type": "password"},
     )
-    role = serializers.ChoiceField(
-        choices=Profile.Role.choices, write_only=True, required=True
-    )
+    # role = serializers.ChoiceField(
+    #     choices=Profile.Role.choices, write_only=True, required=True
+    # )
 
     class Meta:
         model = User
-        fields = ["username", "password", "password2", "email", "role"]
+        fields = ["username", "password", "password2", "email"]
         extra_kwargs = {
             # email делаем обязательным
             "email": {"required": True}
@@ -113,7 +121,24 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         # Устанавливаем роль в профиле
         # Профиль создается автоматически сигналом post_save
-        user.profile.role = validated_data["role"]
-        user.profile.save()
+        # user.profile.role = validated_data["role"]
+        # user.profile.save()
 
         return user
+    
+class TrainerVerificationRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['identity_document', 'qualification_document']
+        # Можно добавить валидацию на типы файлов, размер и т.д.
+        # например, serializers.FileField(validators=[...])
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        if not user.profile.can_request_verification:
+            raise serializers.ValidationError("Вы не можете подать заявку на верификацию в данный момент.")
+        if not attrs.get('identity_document'):
+            raise serializers.ValidationError({"identity_document": "Это поле обязательно."})
+        if not attrs.get('qualification_document'):
+            raise serializers.ValidationError({"qualification_document": "Это поле обязательно."})
+        return attrs

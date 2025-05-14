@@ -17,7 +17,7 @@
           Больше постов нет.
         </div>
       </div>
-      <p v-else class="text-muted small mt-3">У этого пользователя еще нет постов.</p>
+      <p v-else class="small mt-3">У этого пользователя еще нет постов.</p>
     </div>
   </template>
   

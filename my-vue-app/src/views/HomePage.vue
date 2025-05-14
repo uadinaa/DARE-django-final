@@ -69,8 +69,11 @@ import CreatePostForm from '@/components/Post/CreatePostForm.vue';
 
 // const authStore = useAuthStore();
 // const isTrainer = computed(() => authStore.isLoggedIn && authStore.user?.profile?.role === 'trainer');
-// Заглушка для isTrainer, замените на реальную логику из вашего store
-const isTrainer = ref(true); // Поставьте false, чтобы скрыть форму для обычного пользователя
+const currentUser = ref(null);
+const loadingCurrentUser = ref(true);
+const isTrainer = computed(() => {
+  return currentUser.value && currentUser.value.profile && currentUser.value.profile.role === 'trainer';
+});
 
 const posts = ref([]);
 const initialLoading = ref(true);
@@ -81,6 +84,20 @@ const nextPageUrl = ref(null);
 const scrollComponent = ref(null); // Ref для основного контейнера страницы (или window)
 
 const hasNextPage = computed(() => nextPageUrl.value !== null);
+
+const fetchCurrentUser = async () => {
+  loadingCurrentUser.value = true;
+  try {
+    const response = await apiClient.get('/users/me/'); // Эндпоинт для получения данных текущего пользователя
+    currentUser.value = response.data;
+    // console.log('Current user data:', currentUser.value); // Для отладки
+  } catch (error) {
+    console.error('Error fetching current user on HomePage:', error);
+    currentUser.value = null; // В случае ошибки, пользователь не определен
+  } finally {
+    loadingCurrentUser.value = false;
+  }
+};
 
 const checkAndLoadMore = async () => {
   await nextTick();
@@ -203,7 +220,8 @@ const handleScroll = () => {
 };
 
 onMounted(() => {
-  fetchPosts(false);
+  fetchCurrentUser(); // Сначала получаем данные о пользователе
+  fetchPosts(false); 
   window.addEventListener('scroll', handleScroll, true);
 });
 
