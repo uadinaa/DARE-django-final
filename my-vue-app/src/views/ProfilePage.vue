@@ -25,6 +25,12 @@
               Редактировать профиль
             </router-link>
 
+            <div v-if="user.profile?.role === 'trainer'" class="stats">
+              <router-link :to="{ name: 'users-stats', params: { userId: user.id } }" class="btn btn-outline-light btn-sm">
+                Моя статистика
+              </router-link>
+            </div>
+
             <template v-if="isOwnProfile && user.profile?.role !== 'trainer'">
               <button
                 v-if="user.profile?.verification_status === 'pending'"
@@ -65,11 +71,6 @@
              <div v-if="isOwnProfile && user.profile?.role === 'trainer'" class="mt-2">
                 <p class="text-success small mb-0">Вы подтвержденный тренер.</p>
             </div>
-
-          <router-link :to="{ name: 'users-stats', params: { userId: user.id } }" class="btn btn-outline-light btn-sm">
-            Моя статистика
-          </router-link>
-
         </div>
       </div>
 
@@ -132,7 +133,6 @@ const isOwnProfile = computed(() => {
   if (route.name === 'profile') return true;
   return user.value && currentUserId.value && user.value.id === currentUserId.value;
 });
-
 
 // Функция для загрузки данных пользователя (как своего, так и чужого)
 const fetchUserData = async () => {
