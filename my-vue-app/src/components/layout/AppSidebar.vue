@@ -10,7 +10,6 @@
           <li><router-link to="/">Главная</router-link></li>
           <li><router-link :to="{ name: 'profile' }">Мой Профиль</router-link></li>
           <li><router-link to="/chat">Чат-бот</router-link></li>
-          <li><router-link to="/settings">Настройки</router-link></li>
         </ul>
       </nav>
       <div class="sidebar-footer">
