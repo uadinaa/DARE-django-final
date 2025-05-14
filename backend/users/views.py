@@ -69,6 +69,23 @@ class TopTrainersListView(generics.ListAPIView):
                                .select_related('profile')\
                                .order_by('-profile__level_score')[:10]
         return queryset
+    
+    
+class AllTrainersListView(generics.ListAPIView):
+    """
+    Возвращает список всех пользователей с ролью 'тренер'.
+    Поддерживает пагинацию и поиск по search_fields.
+    """
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['username', 'first_name', 'last_name', 'profile__bio'] # Поля для поиска
+    ordering_fields = ['username', 'profile__level_score'] # Поля для возможной сортировки
+    ordering = ['-profile__level_score'] # Сортировка по умолчанию (например, по уровню)
+
+    def get_queryset(self):
+        # Напрямую фильтруем пользователей, у которых профиль имеет роль 'trainer'
+        return User.objects.filter(profile__role=Profile.Role.TRAINER).select_related('profile').all()
 
 
 # --- Admin Actions ---

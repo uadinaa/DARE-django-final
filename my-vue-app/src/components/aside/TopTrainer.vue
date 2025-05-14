@@ -45,58 +45,36 @@ import { ref, onMounted, computed, watch } from 'vue';
 import apiClient from '@/services/api';
 
 // --- Состояния (Refs) ---
-const topTrainersList = ref([]);      // Список топ-10 тренеров
-const allUsersList = ref([]);         // Список всех пользователей для поиска
+const topTrainersList = ref([]);      // Для топ-10 тренеров
+const searchResultsList = ref([]);    // Для результатов поиска со своего эндпоинта
 const searchQuery = ref('');
-const isLoading = ref(false);         // Единый флаг загрузки
+const isLoading = ref(false);
 const error = ref(null);
 const defaultAvatarUrl = ref('@/assets/default-avatar.png');
-const allUsersEverLoaded = ref(false); // Флаг, что все пользователи были хотя бы раз успешно загружены
+
+// Флаг, чтобы понимать, что сейчас отображаются результаты поиска (даже если они пустые)
+const activelySearching = ref(false);
+
 
 // --- Computed Свойства ---
 
-// Активен ли поиск (есть текст в searchQuery)
-const isSearchActive = computed(() => searchQuery.value.trim() !== '');
+const widgetTitle = computed(() => activelySearching.value ? 'Результаты Поиска' : 'Топ Тренеров');
 
-// Заголовок виджета
-const widgetTitle = computed(() => isSearchActive.value ? 'Результаты Поиска' : 'Топ Тренеров');
-
-// Фильтрует allUsersList, оставляя только тренеров
-const allTrainersFromUsers = computed(() => {
-  if (!allUsersEverLoaded.value) return [];
-  return allUsersList.value.filter(user => user.profile && user.profile.role === 'trainer');
-});
-
-// Результаты поиска (фильтрация allTrainersFromUsers по searchQuery)
-const searchResults = computed(() => {
-  if (!isSearchActive.value || !allUsersEverLoaded.value) return [];
-  const query = searchQuery.value.toLowerCase();
-  return allTrainersFromUsers.value.filter(trainer => 
-    trainer.username.toLowerCase().includes(query)
-  );
-});
-
-// Список тренеров, который будет отображаться в шаблоне
 const displayedTrainers = computed(() => {
-  if (isSearchActive.value) {
-    return searchResults.value;
-  }
-  // Если поиск не активен, показываем топ-10, даже если они еще не загружены (будет пустой список или загрузка)
-  return topTrainersList.value;
+  return activelySearching.value ? searchResultsList.value : topTrainersList.value;
 });
 
-// Сообщение, если список пуст
 const emptyResultMessage = computed(() => {
-  if (isLoading.value) return ''; // Не показывать сообщение во время загрузки
-  if (isSearchActive.value) return 'Тренеры по вашему запросу не найдены.';
-  return 'Нет топ тренеров для отображения.';
+  if (isLoading.value) return '';
+  if (activelySearching.value && searchResultsList.value.length === 0) return 'Тренеры по вашему запросу не найдены.';
+  if (!activelySearching.value && topTrainersList.value.length === 0) return 'Нет топ тренеров для отображения.';
+  return ''; // Если есть данные, сообщение не нужно
 });
-
 
 // --- Функции (Methods) ---
 
-// Загрузка топ-10 тренеров
 const fetchTopTrainers = async () => {
+  if (isLoading.value && !activelySearching.value) return; // Предотвращаем двойной вызов, если уже грузим топ
   isLoading.value = true;
   error.value = null;
   try {
@@ -105,70 +83,74 @@ const fetchTopTrainers = async () => {
   } catch (err) {
     console.error("Error fetching top trainers:", err);
     error.value = "Не удалось загрузить топ тренеров.";
-    topTrainersList.value = []; // Очищаем в случае ошибки
+    topTrainersList.value = [];
   } finally {
-    // Завершаем загрузку только если не идет параллельная загрузка всех пользователей
-    if (!isSearchActive.value || (isSearchActive.value && allUsersEverLoaded.value)) {
-        isLoading.value = false;
-    }
+    // Завершаем общую загрузку, только если не выполняется активный поиск
+     if (!activelySearching.value) {
+       isLoading.value = false;
+     }
   }
 };
 
-// Загрузка всех пользователей (с пагинацией)
-const fetchAllUsers = async () => {
-  if (allUsersEverLoaded.value) return; // Не загружать повторно
-
-  isLoading.value = true;
-  error.value = null; // Сбрасываем предыдущую ошибку
-  let accumulatedUsers = [];
-  try {
-    let nextPageUrl = '/users/';
-    while (nextPageUrl) {
-      const response = await apiClient.get(nextPageUrl);
-      const usersData = response.data.results || response.data;
-      if (Array.isArray(usersData)) {
-        accumulatedUsers = accumulatedUsers.concat(usersData);
-      }
-      nextPageUrl = response.data.next;
+// Функция для поиска тренеров через новый эндпоинт
+const searchAllTrainers = async () => {
+  if (!searchQuery.value.trim()) { // Если поиск пустой, не делаем запрос
+    searchResultsList.value = []; // Очищаем результаты поиска
+    activelySearching.value = false; // Выключаем режим активного поиска
+    // Если topTrainersList пуст, можно их загрузить
+    if (topTrainersList.value.length === 0 && !isLoading.value) {
+        await fetchTopTrainers();
     }
-    allUsersList.value = accumulatedUsers;
-    allUsersEverLoaded.value = true; // Устанавливаем флаг после успешной загрузки
+    return;
+  }
+
+  activelySearching.value = true; // Включаем режим активного поиска
+  isLoading.value = true;
+  error.value = null;
+  searchResultsList.value = []; // Очищаем предыдущие результаты на время запроса
+  try {
+    // Используем новый эндпоинт /api/users/trainers/all/ с параметром search
+    // Пагинация будет обрабатываться на бэкенде, если тренеров много.
+    // Фронтенд получит первую страницу результатов. Если нужна загрузка всех страниц поиска - логика усложнится.
+    // Пока предполагаем, что первая страница результатов поиска достаточна, или API отдает всех найденных.
+    const response = await apiClient.get('/users/trainers/all/', {
+      params: {
+        search: searchQuery.value.trim()
+      }
+    });
+    searchResultsList.value = response.data.results || response.data || [];
   } catch (err) {
-    console.error("Error fetching all users:", err);
-    error.value = "Не удалось загрузить список пользователей для поиска.";
-    allUsersList.value = []; // Очищаем в случае ошибки
+    console.error("Error searching trainers:", err);
+    error.value = "Ошибка при поиске тренеров.";
+    searchResultsList.value = [];
   } finally {
-    isLoading.value = false; // Загрузка всех пользователей завершена
+    isLoading.value = false;
   }
 };
 
 // --- Watchers and Lifecycle Hooks ---
-
-// Следим за searchQuery
 let debounceTimer = null;
 watch(searchQuery, (newValue) => {
   clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(async () => {
-    if (newValue.trim() !== '') { // Если поиск активен
-      if (!allUsersEverLoaded.value) {
-        await fetchAllUsers(); // Загружаем всех пользователей, если еще не загружены
-      }
-      // Результаты поиска обновятся через computed свойство searchResults
+  debounceTimer = setTimeout(() => {
+    if (newValue.trim() !== '') {
+      searchAllTrainers();
     } else {
-      // Поиск очищен. Если топ тренеры пусты, можно их перезагрузить.
-      // Обычно displayedTrainers просто переключится на topTrainersList.
+      // Поиск очищен, возвращаемся к топ тренерам
+      activelySearching.value = false;
+      searchResultsList.value = []; // Очищаем результаты
+      error.value = null; // Очищаем ошибку от поиска
+      // Проверяем, нужно ли перезагрузить топ-тренеров (если их список пуст)
       if (topTrainersList.value.length === 0 && !isLoading.value) {
-         await fetchTopTrainers();
+          fetchTopTrainers();
       }
-      error.value = null; // Очищаем ошибку поиска, если она была
     }
-  }, 300); // Задержка для дебаунса
+  }, 500); // Дебаунс 500 мс
 });
 
 onMounted(async () => {
-  await fetchTopTrainers(); // При монтировании загружаем топ тренеров
+  await fetchTopTrainers(); // При монтировании загружаем только топ тренеров
 });
-
 </script>
 
 <style scoped>
